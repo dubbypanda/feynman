@@ -159,6 +159,8 @@ function normalizeFeynmanSettings(
 		settings.defaultThinkingLevel = defaultThinkingLevel;
 	}
 	settings.theme = "feynman";
+	settings.quietStartup = true;
+	settings.collapseChangelog = true;
 
 	const authStorage = AuthStorage.create(authPath);
 	const modelRegistry = new ModelRegistry(authStorage);

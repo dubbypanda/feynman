@@ -12,9 +12,10 @@ It keeps the useful parts of a coding agent:
 But it biases the runtime toward research work:
 - literature review
 - paper lookup
-- replication planning
-- experiment design
-- writing notes and reports
+- source comparison
+- research memo writing
+- paper and report drafting
+- replication planning when relevant
 
 The primary paper backend is `@companion-ai/alpha-hub` and your alphaXiv account.
 The rest of the workflow is augmented through a curated `.pi/settings.json` package stack.
@@ -83,6 +84,8 @@ Feynman loads a lean research stack from [.pi/settings.json](/Users/advaitpaliwa
 - `pi-markdown-preview` for polished Markdown and LaTeX-heavy research writeups
 - `@aliou/pi-processes` for long-running experiments and log tails
 - `pi-zotero` for citation-library workflows
+
+The default expectation is source-grounded outputs with explicit `Sources` sections containing direct URLs.
 
 ## Layout
 

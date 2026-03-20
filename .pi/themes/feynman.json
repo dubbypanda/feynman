@@ -3,24 +3,28 @@
   "name": "feynman",
   "vars": {
     "ink": "#d9d3c7",
-    "paper": "#1f1c19",
-    "paper2": "#26221e",
-    "paper3": "#2f2a25",
-    "stone": "#8c8378",
-    "ash": "#6c655d",
+    "paper": "#181614",
+    "paper2": "#1c1917",
+    "paper3": "#221f1c",
+    "panel": "#27231f",
+    "stone": "#9a9084",
+    "ash": "#6f675e",
+    "darkAsh": "#4f4a44",
     "oxide": "#b76e4c",
     "gold": "#d0a85c",
     "sage": "#88a88a",
     "teal": "#7aa6a1",
     "rose": "#c97b84",
     "violet": "#a98dc6",
-    "selection": "#3a342e"
+    "selection": "#302b27",
+    "successBg": "#1d2520",
+    "errorBg": "#2b1f21"
   },
   "colors": {
     "accent": "gold",
-    "border": "ash",
+    "border": "stone",
     "borderAccent": "gold",
-    "borderMuted": "ash",
+    "borderMuted": "darkAsh",
     "success": "sage",
     "error": "rose",
     "warning": "oxide",
@@ -30,16 +34,16 @@
     "thinkingText": "stone",
 
     "selectedBg": "selection",
-    "userMessageBg": "paper3",
+    "userMessageBg": "panel",
     "userMessageText": "ink",
-    "customMessageBg": "paper3",
+    "customMessageBg": "panel",
     "customMessageText": "ink",
     "customMessageLabel": "violet",
     "toolPendingBg": "paper2",
-    "toolSuccessBg": "#243028",
-    "toolErrorBg": "#362725",
+    "toolSuccessBg": "successBg",
+    "toolErrorBg": "errorBg",
     "toolTitle": "gold",
-    "toolOutput": "ink",
+    "toolOutput": "stone",
 
     "mdHeading": "gold",
     "mdLink": "teal",
@@ -66,7 +70,7 @@
     "syntaxOperator": "ink",
     "syntaxPunctuation": "stone",
 
-    "thinkingOff": "ash",
+    "thinkingOff": "darkAsh",
     "thinkingMinimal": "stone",
     "thinkingLow": "teal",
     "thinkingMedium": "gold",
@@ -76,8 +80,8 @@
     "bashMode": "oxide"
   },
   "export": {
-    "pageBg": "#171411",
-    "cardBg": "#211d19",
-    "infoBg": "#312821"
+    "pageBg": "#141210",
+    "cardBg": "#1c1917",
+    "infoBg": "#27221d"
   }
 }

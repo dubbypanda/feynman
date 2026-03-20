@@ -6,5 +6,7 @@
     "npm:pi-markdown-preview",
     "npm:@aliou/pi-processes",
     "npm:pi-zotero"
-  ]
+  ],
+  "quietStartup": true,
+  "collapseChangelog": true
 }
