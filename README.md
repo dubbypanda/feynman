@@ -3,6 +3,16 @@
 The open source AI research agent
 
 ```bash
+curl -fsSL https://raw.githubusercontent.com/getcompanion-ai/feynman/main/scripts/install/install.sh | bash
+```
+
+```powershell
+irm https://raw.githubusercontent.com/getcompanion-ai/feynman/main/scripts/install/install.ps1 | iex
+```
+
+Or install the npm fallback:
+
+```bash
 npm install -g @companion-ai/feynman
 ```
 

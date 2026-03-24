@@ -30,6 +30,7 @@
   ],
   "scripts": {
     "build": "tsc -p tsconfig.build.json",
+    "build:native-bundle": "node ./scripts/build-native-bundle.mjs",
     "dev": "tsx src/index.ts",
     "prepack": "node ./scripts/prepare-runtime-workspace.mjs",
     "postinstall": "node ./scripts/patch-embedded-pi.mjs",

@@ -1,11 +1,42 @@
-name: Publish to npm
+name: Publish and Release
 
 on:
   push:
     branches: [main]
+  workflow_dispatch:
 
 jobs:
-  publish:
+  version-check:
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+      should_publish: ${{ steps.version.outputs.should_publish }}
+      should_build_release: ${{ steps.version.outputs.should_build_release }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24.14.0
+      - id: version
+        shell: bash
+        run: |
+          CURRENT=$(npm view @companion-ai/feynman version 2>/dev/null || echo "0.0.0")
+          LOCAL=$(node -p "require('./package.json').version")
+          echo "version=$LOCAL" >> "$GITHUB_OUTPUT"
+          if [ "$CURRENT" != "$LOCAL" ]; then
+            echo "should_publish=true" >> "$GITHUB_OUTPUT"
+            echo "should_build_release=true" >> "$GITHUB_OUTPUT"
+          elif [ "${GITHUB_EVENT_NAME}" = "workflow_dispatch" ]; then
+            echo "should_publish=false" >> "$GITHUB_OUTPUT"
+            echo "should_build_release=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "should_publish=false" >> "$GITHUB_OUTPUT"
+            echo "should_build_release=false" >> "$GITHUB_OUTPUT"
+          fi
+
+  publish-npm:
+    needs: version-check
+    if: needs.version-check.outputs.should_publish == 'true'
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -13,19 +44,64 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 24.14.0
           registry-url: https://registry.npmjs.org
-      - run: npm ci
+      - run: npm ci --ignore-scripts
       - run: npm run build
       - run: npm test
-      - name: Publish if version changed
-        run: |
-          CURRENT=$(npm view @companion-ai/feynman version 2>/dev/null || echo "0.0.0")
-          LOCAL=$(node -p "require('./package.json').version")
-          if [ "$CURRENT" != "$LOCAL" ]; then
-            npm publish --access public
-          else
-            echo "Version $LOCAL already published, skipping"
-          fi
+      - run: npm publish --access public
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+  build-native-bundles:
+    needs: version-check
+    if: needs.version-check.outputs.should_build_release == 'true'
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - id: linux-x64
+            os: ubuntu-latest
+          - id: darwin-x64
+            os: macos-13
+          - id: darwin-arm64
+            os: macos-14
+          - id: win32-x64
+            os: windows-latest
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24.14.0
+      - run: npm ci --ignore-scripts
+      - run: npm run build
+      - run: npm run build:native-bundle
+      - uses: actions/upload-artifact@v4
+        with:
+          name: native-${{ matrix.id }}
+          path: dist/release/*
+
+  release-github:
+    needs:
+      - version-check
+      - publish-npm
+      - build-native-bundles
+    if: needs.version-check.outputs.should_publish == 'true'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: release-assets
+          merge-multiple: true
+      - shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          VERSION: ${{ needs.version-check.outputs.version }}
+        run: |
+          gh release create "v$VERSION" release-assets/* \
+            --title "v$VERSION" \
+            --notes "Standalone Feynman bundles for native installation." \
+            --target "$GITHUB_SHA"
