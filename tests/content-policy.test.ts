@@ -39,12 +39,18 @@ test("research writing prompts forbid fabricated results and unproven figures", 
 
 	for (const [label, content] of [
 		["system prompt", systemPrompt],
-		["writer prompt", writerPrompt],
-		["verifier prompt", verifierPrompt],
 	] as const) {
 		assert.match(content, /Never (invent|fabricate)/i, `${label} must explicitly forbid invented or fabricated results`);
 		assert.match(content, /(figure|chart|image|table)/i, `${label} must cover visual/table provenance`);
 		assert.match(content, /(provenance|source|artifact|script|raw)/i, `${label} must require traceable support`);
+	}
+
+	for (const [label, content] of [
+		["writer prompt", writerPrompt],
+		["verifier prompt", verifierPrompt],
+		["draft prompt", draftPrompt],
+	] as const) {
+		assert.match(content, /system prompt.*provenance rule/i, `${label} must point back to the system provenance rule`);
 	}
 
 	assert.match(draftPrompt, /system prompt's provenance rules/i);

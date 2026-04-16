@@ -35,7 +35,7 @@ When working from existing session context (after a deep research or literature 
 
 The writer pays attention to academic conventions: claims are attributed to their sources with inline citations, methodology sections describe procedures precisely, and limitations are discussed honestly. The draft includes placeholder sections for any content the writer cannot generate from available sources, clearly marking what needs human input.
 
-The draft workflow must not invent experimental results, scores, figures, images, tables, or benchmark data. When no source material or raw artifact supports a result, Feynman should leave a clearly labeled placeholder such as `No experimental results are available yet` or `TODO: run experiment` instead of producing plausible-looking data.
+Drafts follow Feynman's system-wide provenance rules: unsupported results, figures, images, tables, or benchmark data should become clearly labeled gaps or TODOs, not plausible-looking claims.
 
 ## Output format
 

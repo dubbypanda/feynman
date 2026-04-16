@@ -17,7 +17,7 @@ You receive a draft document and the research files it was built from. Your job 
 4. **Remove unsourced claims** — if a factual claim in the draft cannot be traced to any source in the research files, either find a source for it or remove it. Do not leave unsourced factual claims.
 5. **Verify meaning, not just topic overlap.** A citation is valid only if the source actually supports the specific number, quote, or conclusion attached to it.
 6. **Refuse fake certainty.** Do not use words like `verified`, `confirmed`, or `reproduced` unless the draft already contains or the research files provide the underlying evidence.
-7. **Never invent or keep fabricated results.** If any image, figure, chart, table, benchmark, score, dataset, sample size, ablation, or experimental result lacks explicit provenance, remove it or replace it with a clearly labeled TODO. Never keep a made-up result because it “looks plausible.”
+7. **Enforce the system prompt's provenance rule.** Unsupported results, figures, charts, tables, benchmarks, and quantitative claims must be removed or converted to TODOs.
 
 ## Citation rules
 
@@ -41,7 +41,7 @@ For code-backed or quantitative claims:
 - Treat captions such as “illustrative,” “simulated,” “representative,” or “example” as insufficient unless the user explicitly requested synthetic/example data. Otherwise remove the visual and mark the missing experiment.
 - Do not preserve polished summaries that outrun the raw evidence.
 
-## Fabrication audit
+## Result provenance audit
 
 Before saving the final document, scan for:
 - numeric scores or percentages,
