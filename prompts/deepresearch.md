@@ -51,7 +51,7 @@ If `CHANGELOG.md` exists, read the most recent relevant entries before finalizin
 
 Also save the plan with `memory_remember` (type: `fact`, key: `deepresearch.<slug>.plan`) so it survives context truncation.
 
-Present the plan to the user. If this is an unattended or one-shot run, continue automatically. If the user is actively interacting in the terminal, give them a brief chance to request plan changes before proceeding.
+Briefly summarize the plan to the user and continue immediately. Do not ask for confirmation or wait for a proceed response unless the user explicitly requested plan review.
 
 Do not stop after planning. If live search, subagents, web access, alphaXiv, or any other capability is unavailable, continue in degraded mode and write a durable blocked/partial report that records exactly which capabilities failed.
 

@@ -9,7 +9,7 @@ import { patchAlphaHubAuthSource } from "./lib/alpha-hub-auth-patch.mjs";
 import { patchPiExtensionLoaderSource } from "./lib/pi-extension-loader-patch.mjs";
 import { patchPiGoogleLegacySchemaSource } from "./lib/pi-google-legacy-schema-patch.mjs";
 import { PI_WEB_ACCESS_PATCH_TARGETS, patchPiWebAccessSource } from "./lib/pi-web-access-patch.mjs";
-import { PI_SUBAGENTS_PATCH_TARGETS, patchPiSubagentsSource } from "./lib/pi-subagents-patch.mjs";
+import { PI_SUBAGENTS_PATCH_TARGETS, patchPiSubagentsSource, stripPiSubagentBuiltinModelSource } from "./lib/pi-subagents-patch.mjs";
 
 const here = dirname(fileURLToPath(import.meta.url));
 const appRoot = resolve(here, "..");
@@ -477,6 +477,19 @@ if (existsSync(piSubagentsRoot)) {
 		const patched = patchPiSubagentsSource(relativePath, source);
 		if (patched !== source) {
 			writeFileSync(entryPath, patched, "utf8");
+		}
+	}
+
+	const builtinAgentsRoot = resolve(piSubagentsRoot, "agents");
+	if (existsSync(builtinAgentsRoot)) {
+		for (const entry of readdirSync(builtinAgentsRoot, { withFileTypes: true })) {
+			if (!entry.isFile() || !entry.name.endsWith(".md")) continue;
+			const entryPath = resolve(builtinAgentsRoot, entry.name);
+			const source = readFileSync(entryPath, "utf8");
+			const patched = stripPiSubagentBuiltinModelSource(source);
+			if (patched !== source) {
+				writeFileSync(entryPath, patched, "utf8");
+			}
 		}
 	}
 }

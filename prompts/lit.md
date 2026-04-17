@@ -10,7 +10,7 @@ Derive a short slug from the topic (lowercase, hyphens, no filler words, ≤5 wo
 
 ## Workflow
 
-1. **Plan** — Outline the scope: key questions, source types to search (papers, web, repos), time period, expected sections, and a small task ledger plus verification log. Write the plan to `outputs/.plans/<slug>.md`. Present the plan to the user. If this is an unattended or one-shot run, continue automatically. If the user is actively interacting, give them a brief chance to request changes before proceeding.
+1. **Plan** — Outline the scope: key questions, source types to search (papers, web, repos), time period, expected sections, and a small task ledger plus verification log. Write the plan to `outputs/.plans/<slug>.md`. Briefly summarize the plan to the user and continue immediately. Do not ask for confirmation or wait for a proceed response unless the user explicitly requested plan review.
 2. **Gather** — Use the `researcher` subagent when the sweep is wide enough to benefit from delegated paper triage before synthesis. For narrow topics, search directly. Researcher outputs go to `<slug>-research-*.md`. Do not silently skip assigned questions; mark them `done`, `blocked`, or `superseded`.
 3. **Synthesize** — Separate consensus, disagreements, and open questions. When useful, propose concrete next experiments or follow-up reading. Generate charts with `pi-charts` for quantitative comparisons across papers and Mermaid diagrams for taxonomies or method pipelines. Before finishing the draft, sweep every strong claim against the verification log and downgrade anything that is inferred or single-source critical.
 4. **Cite** — Spawn the `verifier` agent to add inline citations and verify every source URL in the draft.

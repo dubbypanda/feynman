@@ -88,6 +88,15 @@ test("resolveModelProviderForCommand supports LM Studio as a first-class local p
 	assert.equal(resolved?.id, "lm-studio");
 });
 
+test("resolveModelProviderForCommand supports LiteLLM as a first-class proxy provider", () => {
+	const authPath = createAuthPath({});
+
+	const resolved = resolveModelProviderForCommand(authPath, "litellm");
+
+	assert.equal(resolved?.kind, "api-key");
+	assert.equal(resolved?.id, "litellm");
+});
+
 test("resolveModelProviderForCommand prefers OAuth when a provider supports both auth modes", () => {
 	const authPath = createAuthPath({});
 

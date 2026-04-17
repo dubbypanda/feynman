@@ -169,6 +169,15 @@ function resolvePackageManagerCommand(settingsManager: SettingsManager): { comma
 	return { command: executable, args };
 }
 
+function childPackageManagerEnv(): NodeJS.ProcessEnv {
+	return {
+		...process.env,
+		PATH: getPathWithCurrentNode(process.env.PATH),
+		npm_config_dry_run: "false",
+		NPM_CONFIG_DRY_RUN: "false",
+	};
+}
+
 async function runPackageManagerInstall(
 	settingsManager: SettingsManager,
 	workingDir: string,
@@ -207,10 +216,7 @@ async function runPackageManagerInstall(
 		const child = spawn(packageManagerCommand.command, args, {
 			cwd: scope === "user" ? agentDir : workingDir,
 			stdio: ["ignore", "pipe", "pipe"],
-			env: {
-				...process.env,
-				PATH: getPathWithCurrentNode(process.env.PATH),
-			},
+			env: childPackageManagerEnv(),
 		});
 
 		child.stdout?.on("data", (chunk) => relayFilteredOutput(chunk, process.stdout));

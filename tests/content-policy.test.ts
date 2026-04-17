@@ -69,3 +69,31 @@ test("deepresearch workflow requires durable artifacts even when blocked", () =>
 	assert.match(deepResearchPrompt, /Verification: BLOCKED/i);
 	assert.match(deepResearchPrompt, /Never end with only an explanation in chat/i);
 });
+
+test("workflow prompts do not introduce implicit confirmation gates", () => {
+	const workflowPrompts = [
+		"audit.md",
+		"compare.md",
+		"deepresearch.md",
+		"draft.md",
+		"lit.md",
+		"review.md",
+		"summarize.md",
+		"watch.md",
+	];
+	const bannedConfirmationGates = [
+		/Do you want to proceed/i,
+		/Wait for confirmation/i,
+		/wait for user confirmation/i,
+		/give them a brief chance/i,
+		/request changes before proceeding/i,
+	];
+
+	for (const fileName of workflowPrompts) {
+		const content = readFileSync(join(repoRoot, "prompts", fileName), "utf8");
+		assert.match(content, /continue (immediately|automatically)/i, `${fileName} should keep running after planning`);
+		for (const pattern of bannedConfirmationGates) {
+			assert.doesNotMatch(content, pattern, `${fileName} contains confirmation gate ${pattern}`);
+		}
+	}
+});

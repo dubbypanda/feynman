@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 
-import { patchPiSubagentsSource } from "../scripts/lib/pi-subagents-patch.mjs";
+import { patchPiSubagentsSource, stripPiSubagentBuiltinModelSource } from "../scripts/lib/pi-subagents-patch.mjs";
 
 const CASES = [
 	{
@@ -139,4 +139,23 @@ test("patchPiSubagentsSource rewrites modern agents.ts discovery paths", () => {
 	assert.ok(!patched.includes('loadAgentsFromDir(userDirOld, "user")'));
 	assert.ok(!patched.includes('loadChainsFromDir(userDirNew, "user")'));
 	assert.ok(!patched.includes('fs.existsSync(userDirNew) ? userDirNew : userDirOld'));
+});
+
+test("stripPiSubagentBuiltinModelSource removes built-in model pins", () => {
+	const input = [
+		"---",
+		"name: researcher",
+		"description: Web researcher",
+		"model: anthropic/claude-sonnet-4-6",
+		"tools: read, web_search",
+		"---",
+		"",
+		"Body",
+	].join("\n");
+
+	const patched = stripPiSubagentBuiltinModelSource(input);
+
+	assert.ok(!patched.includes("model: anthropic/claude-sonnet-4-6"));
+	assert.match(patched, /name: researcher/);
+	assert.match(patched, /tools: read, web_search/);
 });

@@ -66,6 +66,24 @@ function replaceAll(source, from, to) {
 	return source.split(from).join(to);
 }
 
+export function stripPiSubagentBuiltinModelSource(source) {
+	if (!source.startsWith("---\n")) {
+		return source;
+	}
+
+	const endIndex = source.indexOf("\n---", 4);
+	if (endIndex === -1) {
+		return source;
+	}
+
+	const frontmatter = source.slice(4, endIndex);
+	const nextFrontmatter = frontmatter
+		.split("\n")
+		.filter((line) => !/^\s*model\s*:/.test(line))
+		.join("\n");
+	return `---\n${nextFrontmatter}${source.slice(endIndex)}`;
+}
+
 export function patchPiSubagentsSource(relativePath, source) {
 	let patched = source;
 

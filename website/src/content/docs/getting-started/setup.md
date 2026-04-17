@@ -52,7 +52,7 @@ Amazon Bedrock (AWS credential chain)
 
 Feynman verifies the same AWS credential chain Pi uses at runtime, including `AWS_PROFILE`, `~/.aws` credentials/config, SSO, ECS/IRSA, and EC2 instance roles. Once that check passes, Bedrock models become available in `feynman model list` without needing a traditional API key.
 
-### Local models: LM Studio, Ollama, vLLM
+### Local models: LM Studio, LiteLLM, Ollama, vLLM
 
 If you want to use LM Studio, start the LM Studio local server, load a model, choose the API-key flow, and then select:
 
@@ -69,6 +69,22 @@ API key: lm-studio
 ```
 
 Feynman attempts to read LM Studio's `/models` endpoint and prefill the loaded model id.
+
+For LiteLLM, start the proxy, choose the API-key flow, and then select:
+
+```text
+LiteLLM Proxy (OpenAI-compatible gateway)
+```
+
+The default settings are:
+
+```text
+Base URL: http://localhost:4000/v1
+API mode: openai-completions
+Master key: optional, read from LITELLM_MASTER_KEY
+```
+
+Feynman attempts to read LiteLLM's `/models` endpoint and prefill model ids from the proxy config.
 
 For Ollama, vLLM, or another OpenAI-compatible local server, choose:
 

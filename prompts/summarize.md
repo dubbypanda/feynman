@@ -101,7 +101,7 @@ print(f"[summarize] chunks={len(chunks)} chunk_size={chunk_size} overlap={overla
 
 ### 3b. Confirm before spawning
 
-If this is an unattended or one-shot run, continue automatically. Otherwise tell the user: "Source is ~<chars> chars -> <N> chunks -> <N> researcher subagents. This may take several minutes. Proceed?" Wait for confirmation before launching Tier 3.
+Briefly summarize: "Source is ~<chars> chars -> <N> chunks -> <N> researcher subagents. This may take several minutes." Then continue automatically. Do not ask for confirmation or wait for a proceed response unless the user explicitly requested review before launching.
 
 ### 3c. Dispatch researcher subagents
 

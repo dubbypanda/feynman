@@ -188,6 +188,46 @@ test("installPackageSources skips native packages on unsupported Node majors bef
 	}
 });
 
+test("installPackageSources disables inherited npm dry-run config for child installs", async () => {
+	const root = mkdtempSync(join(tmpdir(), "feynman-package-ops-"));
+	const workingDir = resolve(root, "project");
+	const agentDir = resolve(root, "agent");
+	const markerPath = resolve(root, "install-env-ok.txt");
+	mkdirSync(workingDir, { recursive: true });
+
+	const scriptPath = writeFakeNpmScript(root, [
+		`import { writeFileSync } from "node:fs";`,
+		`if (process.env.npm_config_dry_run !== "false" || process.env.NPM_CONFIG_DRY_RUN !== "false") process.exit(42);`,
+		`writeFileSync(${JSON.stringify(markerPath)}, "ok\\n", "utf8");`,
+		"process.exit(0);",
+	].join("\n"));
+
+	writeSettings(agentDir, {
+		npmCommand: [process.execPath, scriptPath],
+	});
+
+	const originalLower = process.env.npm_config_dry_run;
+	const originalUpper = process.env.NPM_CONFIG_DRY_RUN;
+	process.env.npm_config_dry_run = "true";
+	process.env.NPM_CONFIG_DRY_RUN = "true";
+	try {
+		const result = await installPackageSources(workingDir, agentDir, ["npm:test-package"]);
+		assert.deepEqual(result.installed, ["npm:test-package"]);
+		assert.equal(existsSync(markerPath), true);
+	} finally {
+		if (originalLower === undefined) {
+			delete process.env.npm_config_dry_run;
+		} else {
+			process.env.npm_config_dry_run = originalLower;
+		}
+		if (originalUpper === undefined) {
+			delete process.env.NPM_CONFIG_DRY_RUN;
+		} else {
+			process.env.NPM_CONFIG_DRY_RUN = originalUpper;
+		}
+	}
+});
+
 test("updateConfiguredPackages batches multiple npm updates into a single install per scope", async () => {
 	const root = mkdtempSync(join(tmpdir(), "feynman-package-ops-"));
 	const workingDir = resolve(root, "project");

@@ -84,6 +84,7 @@ const API_KEY_PROVIDERS: ApiKeyProviderInfo[] = [
 	{ id: "anthropic", label: "Anthropic API", envVar: "ANTHROPIC_API_KEY" },
 	{ id: "google", label: "Google Gemini API", envVar: "GEMINI_API_KEY" },
 	{ id: "lm-studio", label: "LM Studio (local OpenAI-compatible server)" },
+	{ id: "litellm", label: "LiteLLM Proxy (OpenAI-compatible gateway)" },
 	{ id: "__custom__", label: "Custom provider (local/self-hosted/proxy)" },
 	{ id: "amazon-bedrock", label: "Amazon Bedrock (AWS credential chain)" },
 	{ id: "openrouter", label: "OpenRouter", envVar: "OPENROUTER_API_KEY" },
@@ -127,15 +128,24 @@ export function resolveModelProviderForCommand(
 	return undefined;
 }
 
+function apiKeyProviderHint(provider: ApiKeyProviderInfo): string {
+	if (provider.id === "__custom__") {
+		return "Ollama, vLLM, LM Studio, proxies";
+	}
+	if (provider.id === "lm-studio") {
+		return "http://localhost:1234/v1";
+	}
+	if (provider.id === "litellm") {
+		return "http://localhost:4000/v1";
+	}
+	return provider.envVar ?? provider.id;
+}
+
 async function selectApiKeyProvider(): Promise<ApiKeyProviderInfo | undefined> {
 	const options: PromptSelectOption<ApiKeyProviderInfo | "cancel">[] = API_KEY_PROVIDERS.map((provider) => ({
 		value: provider,
 		label: provider.label,
-		hint: provider.id === "__custom__"
-			? "Ollama, vLLM, LM Studio, proxies"
-			: provider.id === "lm-studio"
-				? "http://localhost:1234/v1"
-			: provider.envVar ?? provider.id,
+		hint: apiKeyProviderHint(provider),
 	}));
 	options.push({ value: "cancel", label: "Cancel" });
 
@@ -403,6 +413,65 @@ async function promptLmStudioProviderSetup(): Promise<CustomProviderSetup | unde
 	};
 }
 
+async function promptLiteLlmProviderSetup(): Promise<CustomProviderSetup | undefined> {
+	printSection("LiteLLM Proxy");
+	printInfo("Start the LiteLLM proxy first. Feynman uses the OpenAI-compatible chat-completions API.");
+
+	const baseUrlRaw = await promptText("Base URL", "http://localhost:4000/v1");
+	const { baseUrl } = normalizeCustomProviderBaseUrl("openai-completions", baseUrlRaw);
+	if (!baseUrl) {
+		printWarning("Base URL is required.");
+		return undefined;
+	}
+
+	const keyChoices = [
+		"Yes (use LITELLM_MASTER_KEY and send Authorization: Bearer <key>)",
+		"No (proxy runs without authentication)",
+		"Cancel",
+	];
+	const keySelection = await promptChoice("Is the proxy protected by a master key?", keyChoices, 0);
+	if (keySelection >= 2) {
+		return undefined;
+	}
+
+	const hasKey = keySelection === 0;
+	const apiKeyConfig = hasKey ? "LITELLM_MASTER_KEY" : "local";
+	const authHeader = hasKey;
+	if (hasKey) {
+		printInfo("Set LITELLM_MASTER_KEY in your shell or .env before using Feynman.");
+	}
+
+	const resolvedKey = hasKey ? await resolveApiKeyConfig(apiKeyConfig) : apiKeyConfig;
+	const detectedModelIds = resolvedKey
+		? await bestEffortFetchOpenAiModelIds(baseUrl, resolvedKey, authHeader)
+		: undefined;
+
+	let modelIdsDefault = "gpt-4";
+	if (detectedModelIds && detectedModelIds.length > 0) {
+		const sample = detectedModelIds.slice(0, 10).join(", ");
+		printInfo(`Detected LiteLLM models: ${sample}${detectedModelIds.length > 10 ? ", ..." : ""}`);
+		modelIdsDefault = detectedModelIds[0]!;
+	} else {
+		printInfo("No models detected from /models. Enter the model id(s) from your LiteLLM config.");
+	}
+
+	const modelIdsRaw = await promptText("Model id(s) (comma-separated)", modelIdsDefault);
+	const modelIds = normalizeModelIds(modelIdsRaw);
+	if (modelIds.length === 0) {
+		printWarning("At least one model id is required.");
+		return undefined;
+	}
+
+	return {
+		providerId: "litellm",
+		modelIds,
+		baseUrl,
+		api: "openai-completions",
+		apiKeyConfig,
+		authHeader,
+	};
+}
+
 async function verifyCustomProvider(setup: CustomProviderSetup, authPath: string): Promise<void> {
 	const registry = createModelRegistry(authPath);
 	const modelsError = registry.getError();
@@ -610,6 +679,31 @@ async function configureApiKeyProvider(authPath: string, providerId?: string): P
 		}
 
 		printSuccess("Saved LM Studio provider.");
+		await verifyCustomProvider(setup, authPath);
+		return true;
+	}
+
+	if (provider.id === "litellm") {
+		const setup = await promptLiteLlmProviderSetup();
+		if (!setup) {
+			printInfo("LiteLLM setup cancelled.");
+			return false;
+		}
+
+		const modelsJsonPath = getModelsJsonPath(authPath);
+		const result = upsertProviderConfig(modelsJsonPath, setup.providerId, {
+			baseUrl: setup.baseUrl,
+			apiKey: setup.apiKeyConfig,
+			api: setup.api,
+			authHeader: setup.authHeader,
+			models: setup.modelIds.map((id) => ({ id })),
+		});
+		if (!result.ok) {
+			printWarning(result.error);
+			return false;
+		}
+
+		printSuccess("Saved LiteLLM provider.");
 		await verifyCustomProvider(setup, authPath);
 		return true;
 	}

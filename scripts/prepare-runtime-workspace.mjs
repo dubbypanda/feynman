@@ -1,6 +1,8 @@
-import { existsSync, mkdirSync, readFileSync, rmSync, statSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, readdirSync, readFileSync, rmSync, statSync, writeFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { spawnSync } from "node:child_process";
+
+import { stripPiSubagentBuiltinModelSource } from "./lib/pi-subagents-patch.mjs";
 
 const appRoot = resolve(import.meta.dirname, "..");
 const settingsPath = resolve(appRoot, ".feynman", "settings.json");
@@ -10,7 +12,7 @@ const workspaceNodeModulesDir = resolve(workspaceDir, "node_modules");
 const manifestPath = resolve(workspaceDir, ".runtime-manifest.json");
 const workspacePackageJsonPath = resolve(workspaceDir, "package.json");
 const workspaceArchivePath = resolve(feynmanDir, "runtime-workspace.tgz");
-const PRUNE_VERSION = 3;
+const PRUNE_VERSION = 4;
 
 function readPackageSpecs() {
 	const settings = JSON.parse(readFileSync(settingsPath, "utf8"));
@@ -72,6 +74,17 @@ function writeWorkspacePackageJson() {
 	);
 }
 
+function childNpmInstallEnv() {
+	return {
+		...process.env,
+		// `npm pack --dry-run` exports dry-run config to lifecycle scripts. The
+		// vendored runtime workspace must still install real node_modules so the
+		// publish artifact can be validated without poisoning the archive.
+		npm_config_dry_run: "false",
+		NPM_CONFIG_DRY_RUN: "false",
+	};
+}
+
 function prepareWorkspace(packageSpecs) {
 	rmSync(workspaceDir, { recursive: true, force: true });
 	mkdirSync(workspaceDir, { recursive: true });
@@ -84,9 +97,9 @@ function prepareWorkspace(packageSpecs) {
 	const result = spawnSync(
 		process.env.npm_execpath ? process.execPath : "npm",
 		process.env.npm_execpath
-			? [process.env.npm_execpath, "install", "--prefer-offline", "--no-audit", "--no-fund", "--loglevel", "error", "--prefix", workspaceDir, ...packageSpecs]
-			: ["install", "--prefer-offline", "--no-audit", "--no-fund", "--loglevel", "error", "--prefix", workspaceDir, ...packageSpecs],
-		{ stdio: "inherit" },
+			? [process.env.npm_execpath, "install", "--prefer-offline", "--no-audit", "--no-fund", "--no-dry-run", "--loglevel", "error", "--prefix", workspaceDir, ...packageSpecs]
+			: ["install", "--prefer-offline", "--no-audit", "--no-fund", "--no-dry-run", "--loglevel", "error", "--prefix", workspaceDir, ...packageSpecs],
+		{ stdio: "inherit", env: childNpmInstallEnv() },
 	);
 	if (result.status !== 0) {
 		process.exit(result.status ?? 1);
@@ -122,6 +135,25 @@ function pruneWorkspace() {
 	}
 }
 
+function stripBundledPiSubagentModelPins() {
+	const agentsRoot = resolve(workspaceNodeModulesDir, "pi-subagents", "agents");
+	if (!existsSync(agentsRoot)) {
+		return false;
+	}
+
+	let changed = false;
+	for (const entry of readdirSync(agentsRoot, { withFileTypes: true })) {
+		if (!entry.isFile() || !entry.name.endsWith(".md")) continue;
+		const entryPath = resolve(agentsRoot, entry.name);
+		const source = readFileSync(entryPath, "utf8");
+		const patched = stripPiSubagentBuiltinModelSource(source);
+		if (patched === source) continue;
+		writeFileSync(entryPath, patched, "utf8");
+		changed = true;
+	}
+	return changed;
+}
+
 function archiveIsCurrent() {
 	if (!existsSync(workspaceArchivePath) || !existsSync(manifestPath)) {
 		return false;
@@ -145,6 +177,10 @@ const packageSpecs = readPackageSpecs();
 
 if (workspaceIsCurrent(packageSpecs)) {
 	console.log("[feynman] vendored runtime workspace already up to date");
+	if (stripBundledPiSubagentModelPins()) {
+		writeManifest(packageSpecs);
+		console.log("[feynman] stripped bundled pi-subagents model pins");
+	}
 	if (archiveIsCurrent()) {
 		process.exit(0);
 	}
@@ -157,6 +193,7 @@ if (workspaceIsCurrent(packageSpecs)) {
 console.log("[feynman] preparing vendored runtime workspace...");
 prepareWorkspace(packageSpecs);
 pruneWorkspace();
+stripBundledPiSubagentModelPins();
 writeManifest(packageSpecs);
 createWorkspaceArchive();
 console.log("[feynman] vendored runtime workspace ready");
