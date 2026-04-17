@@ -258,7 +258,7 @@ test("updateConfiguredPackages batches multiple npm updates into a single instal
 	globalThis.fetch = (async () => ({
 		ok: true,
 		json: async () => ({ version: "2.0.0" }),
-	})) as typeof fetch;
+	})) as unknown as typeof fetch;
 
 	try {
 		const result = await updateConfiguredPackages(workingDir, agentDir);
@@ -306,7 +306,7 @@ test("updateConfiguredPackages skips native package updates on unsupported Node 
 	globalThis.fetch = (async () => ({
 		ok: true,
 		json: async () => ({ version: "2.0.0" }),
-	})) as typeof fetch;
+	})) as unknown as typeof fetch;
 	Object.defineProperty(process.versions, "node", { value: "25.0.0", configurable: true });
 
 	try {

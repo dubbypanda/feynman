@@ -7,12 +7,54 @@ import {
 	readPaperCode,
 	searchPapers,
 } from "@companion-ai/alpha-hub/lib";
-import type { ExtensionAPI } from "@mariozechner/pi-coding-agent";
+import { createHash } from "node:crypto";
+import { mkdirSync, writeFileSync } from "node:fs";
+import { dirname, resolve } from "node:path";
+
+import type { ExtensionAPI, ExtensionContext } from "@mariozechner/pi-coding-agent";
 import { Type } from "@sinclair/typebox";
 
 function formatText(value: unknown): string {
 	if (typeof value === "string") return value;
 	return JSON.stringify(value, null, 2);
+}
+
+function toolOutputCapChars(): number {
+	const raw = Number(process.env.FEYNMAN_TOOL_OUTPUT_CAP_CHARS);
+	return Number.isFinite(raw) && raw > 0 ? Math.floor(raw) : 32_000;
+}
+
+function spillPath(ctx: ExtensionContext, toolName: string, text: string): string {
+	const hash = createHash("sha256").update(text).digest("hex").slice(0, 12);
+	return resolve(ctx.cwd, "outputs", ".cache", `${toolName}-${hash}.md`);
+}
+
+export function formatToolResultWithSpillover(
+	ctx: ExtensionContext,
+	toolName: string,
+	result: unknown,
+): { text: string; details: unknown } {
+	const text = formatText(result);
+	const cap = toolOutputCapChars();
+	if (text.length <= cap) {
+		return { text, details: result };
+	}
+
+	const path = spillPath(ctx, toolName, text);
+	mkdirSync(dirname(path), { recursive: true });
+	writeFileSync(path, text, "utf8");
+
+	const head = text.slice(0, Math.min(cap, 4_000));
+	const pointer = {
+		feynman_spillover: true,
+		tool: toolName,
+		path,
+		bytes: Buffer.byteLength(text, "utf8"),
+		sha256: createHash("sha256").update(text).digest("hex"),
+		note: "Full tool output was written to disk. Read the path in bounded chunks instead of asking the tool to return everything again.",
+		head,
+	};
+	return { text: JSON.stringify(pointer, null, 2), details: pointer };
 }
 
 export function registerAlphaTools(pi: ExtensionAPI): void {
@@ -27,9 +69,10 @@ export function registerAlphaTools(pi: ExtensionAPI): void {
 				Type.String({ description: "Search mode: semantic, keyword, both, agentic, or all." }),
 			),
 		}),
-		async execute(_toolCallId, params) {
+		async execute(_toolCallId, params, _signal, _onUpdate, ctx) {
 			const result = await searchPapers(params.query, params.mode?.trim() || "semantic");
-			return { content: [{ type: "text", text: formatText(result) }], details: result };
+			const formatted = formatToolResultWithSpillover(ctx, "alpha_search", result);
+			return { content: [{ type: "text", text: formatted.text }], details: formatted.details };
 		},
 	});
 
@@ -41,9 +84,10 @@ export function registerAlphaTools(pi: ExtensionAPI): void {
 			paper: Type.String({ description: "arXiv ID, arXiv URL, or alphaXiv URL." }),
 			fullText: Type.Optional(Type.Boolean({ description: "Return raw full text instead of AI report." })),
 		}),
-		async execute(_toolCallId, params) {
+		async execute(_toolCallId, params, _signal, _onUpdate, ctx) {
 			const result = await getPaper(params.paper, { fullText: params.fullText });
-			return { content: [{ type: "text", text: formatText(result) }], details: result };
+			const formatted = formatToolResultWithSpillover(ctx, "alpha_get_paper", result);
+			return { content: [{ type: "text", text: formatted.text }], details: formatted.details };
 		},
 	});
 
@@ -55,9 +99,10 @@ export function registerAlphaTools(pi: ExtensionAPI): void {
 			paper: Type.String({ description: "arXiv ID, arXiv URL, or alphaXiv URL." }),
 			question: Type.String({ description: "Question about the paper." }),
 		}),
-		async execute(_toolCallId, params) {
+		async execute(_toolCallId, params, _signal, _onUpdate, ctx) {
 			const result = await askPaper(params.paper, params.question);
-			return { content: [{ type: "text", text: formatText(result) }], details: result };
+			const formatted = formatToolResultWithSpillover(ctx, "alpha_ask_paper", result);
+			return { content: [{ type: "text", text: formatted.text }], details: formatted.details };
 		},
 	});
 
@@ -70,13 +115,14 @@ export function registerAlphaTools(pi: ExtensionAPI): void {
 			note: Type.Optional(Type.String({ description: "Annotation text. Omit when clear=true." })),
 			clear: Type.Optional(Type.Boolean({ description: "Clear the existing annotation." })),
 		}),
-		async execute(_toolCallId, params) {
+		async execute(_toolCallId, params, _signal, _onUpdate, ctx) {
 			const result = params.clear
 				? await clearPaperAnnotation(params.paper)
 				: params.note
 					? await annotatePaper(params.paper, params.note)
 					: (() => { throw new Error("Provide either note or clear=true."); })();
-			return { content: [{ type: "text", text: formatText(result) }], details: result };
+			const formatted = formatToolResultWithSpillover(ctx, "alpha_annotate_paper", result);
+			return { content: [{ type: "text", text: formatted.text }], details: formatted.details };
 		},
 	});
 
@@ -85,9 +131,10 @@ export function registerAlphaTools(pi: ExtensionAPI): void {
 		label: "Alpha List Annotations",
 		description: "List all persistent local paper annotations.",
 		parameters: Type.Object({}),
-		async execute() {
+		async execute(_toolCallId, _params, _signal, _onUpdate, ctx) {
 			const result = await listPaperAnnotations();
-			return { content: [{ type: "text", text: formatText(result) }], details: result };
+			const formatted = formatToolResultWithSpillover(ctx, "alpha_list_annotations", result);
+			return { content: [{ type: "text", text: formatted.text }], details: formatted.details };
 		},
 	});
 
@@ -99,9 +146,10 @@ export function registerAlphaTools(pi: ExtensionAPI): void {
 			githubUrl: Type.String({ description: "GitHub repository URL." }),
 			path: Type.Optional(Type.String({ description: "File or directory path. Default: '/'" })),
 		}),
-		async execute(_toolCallId, params) {
+		async execute(_toolCallId, params, _signal, _onUpdate, ctx) {
 			const result = await readPaperCode(params.githubUrl, params.path?.trim() || "/");
-			return { content: [{ type: "text", text: formatText(result) }], details: result };
+			const formatted = formatToolResultWithSpillover(ctx, "alpha_read_code", result);
+			return { content: [{ type: "text", text: formatted.text }], details: formatted.details };
 		},
 	});
 }
