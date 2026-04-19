@@ -27,7 +27,7 @@ import {
 	normalizeOptionalPackagePresetName,
 	resolvePackageUpdateSources,
 } from "./pi/package-presets.js";
-import { normalizeFeynmanSettings, normalizeThinkingLevel, parseModelSpec } from "./pi/settings.js";
+import { normalizeFeynmanSettings, normalizeThinkingLevel, parseModelSpec, type ThinkingLevel } from "./pi/settings.js";
 import { applyFeynmanPackageManagerEnv } from "./pi/runtime.js";
 import { getConfiguredServiceTier, normalizeServiceTier, setConfiguredServiceTier } from "./model/service-tier.js";
 import {
@@ -434,6 +434,17 @@ export function appendWorkflowFlagPositionals(
 	return appended;
 }
 
+export function resolveThinkingConfig(rawValue: string | undefined): {
+	defaultThinkingLevel: ThinkingLevel;
+	launchThinkingLevel?: ThinkingLevel;
+} {
+	const explicitThinkingLevel = normalizeThinkingLevel(rawValue);
+	return {
+		defaultThinkingLevel: explicitThinkingLevel ?? "medium",
+		launchThinkingLevel: explicitThinkingLevel,
+	};
+}
+
 export function shouldRunInteractiveSetup(
 	explicitModelSpec: string | undefined,
 	currentModelSpec: string | undefined,
@@ -506,9 +517,9 @@ export async function main(): Promise<void> {
 	const sessionDir = resolve(values["session-dir"] ?? getDefaultSessionDir(feynmanHome));
 	const feynmanSettingsPath = resolve(feynmanAgentDir, "settings.json");
 	const feynmanAuthPath = resolve(feynmanAgentDir, "auth.json");
-	const thinkingLevel = normalizeThinkingLevel(values.thinking ?? process.env.FEYNMAN_THINKING) ?? "medium";
+	const { defaultThinkingLevel, launchThinkingLevel } = resolveThinkingConfig(values.thinking ?? process.env.FEYNMAN_THINKING);
 
-	normalizeFeynmanSettings(feynmanSettingsPath, bundledSettingsPath, thinkingLevel, feynmanAuthPath);
+	normalizeFeynmanSettings(feynmanSettingsPath, bundledSettingsPath, defaultThinkingLevel, feynmanAuthPath);
 
 	if (values.doctor) {
 		runDoctor({
@@ -564,7 +575,7 @@ export async function main(): Promise<void> {
 			workingDir,
 			sessionDir,
 			appRoot,
-			defaultThinkingLevel: thinkingLevel,
+			defaultThinkingLevel,
 		});
 		return;
 	}
@@ -650,12 +661,12 @@ export async function main(): Promise<void> {
 			workingDir,
 			sessionDir,
 			appRoot,
-			defaultThinkingLevel: thinkingLevel,
+			defaultThinkingLevel,
 		});
 		if (!getCurrentModelSpec(feynmanSettingsPath)) {
 			return;
 		}
-		normalizeFeynmanSettings(feynmanSettingsPath, bundledSettingsPath, thinkingLevel, feynmanAuthPath);
+		normalizeFeynmanSettings(feynmanSettingsPath, bundledSettingsPath, defaultThinkingLevel, feynmanAuthPath);
 	}
 
 	const workflowCommandNames = new Set(readPromptSpecs(appRoot).filter((s) => s.topLevelCli).map((s) => s.name));
@@ -668,7 +679,7 @@ export async function main(): Promise<void> {
 		feynmanAgentDir,
 		feynmanVersion,
 		mode,
-		thinkingLevel,
+		thinkingLevel: launchThinkingLevel,
 		explicitModelSpec,
 		...promptOptions,
 	});

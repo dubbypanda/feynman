@@ -33,6 +33,19 @@ test("buildPiArgs includes configured runtime paths and prompt", () => {
 	]);
 });
 
+test("buildPiArgs omits thinking arg when launch thinking is not explicit", () => {
+	const args = buildPiArgs({
+		appRoot: "/repo/feynman",
+		workingDir: "/workspace",
+		sessionDir: "/sessions",
+		feynmanAgentDir: "/home/.feynman/agent",
+		mode: "rpc",
+		initialPrompt: "hello",
+	});
+
+	assert.equal(args.includes("--thinking"), false);
+});
+
 test("buildPiEnv wires Feynman paths into the Pi environment", () => {
 	const previousUppercasePrefix = process.env.NPM_CONFIG_PREFIX;
 	const previousLowercasePrefix = process.env.npm_config_prefix;

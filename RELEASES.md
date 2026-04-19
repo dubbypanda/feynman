@@ -4,6 +4,19 @@ This file is the public release history for Feynman. Keep entries user-facing: w
 
 GitHub release notes are generated from the matching `## vX.Y.Z` section in this file.
 
+## v0.2.39 - 2026-04-19
+
+### Fixes
+
+- Fixed TUI-selected thinking/reasoning effort persistence. Feynman no longer passes an implicit `--thinking medium` on every launch, so thinking levels saved by Pi after `Shift+Tab` survive restarts.
+- Explicit `--thinking <level>` and `FEYNMAN_THINKING=<level>` still override the saved default for that launch.
+
+### Validation
+
+- Added regression coverage that Feynman only passes a launch thinking override when it was explicitly configured.
+- Full local tests passed: 126/126.
+- Typecheck and build passed.
+
 ## v0.2.38 - 2026-04-19
 
 ### Fixes

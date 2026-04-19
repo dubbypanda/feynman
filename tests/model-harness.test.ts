@@ -4,7 +4,7 @@ import { mkdtempSync, readFileSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 
-import { appendWorkflowFlagPositionals, resolveInitialPrompt, resolvePiPromptOptions, shouldRunInteractiveSetup } from "../src/cli.js";
+import { appendWorkflowFlagPositionals, resolveInitialPrompt, resolvePiPromptOptions, resolveThinkingConfig, shouldRunInteractiveSetup } from "../src/cli.js";
 import { buildModelStatusSnapshotFromRecords, chooseRecommendedModel } from "../src/model/catalog.js";
 import { resolveModelProviderForCommand, setDefaultModelSpec } from "../src/model/commands.js";
 import { createModelRegistry } from "../src/model/registry.js";
@@ -206,6 +206,21 @@ test("appendWorkflowFlagPositionals preserves summarize CLI flags parsed after p
 		["paper.md", "--window-size", "2000", "--overlap", "200", "--tier1-threshold", "8000", "--tier2-threshold", "20000"],
 	);
 	assert.deepEqual(appendWorkflowFlagPositionals("review", ["paper.md"], { "window-size": "2000" }), ["paper.md"]);
+});
+
+test("resolveThinkingConfig only passes launch thinking when explicitly configured", () => {
+	assert.deepEqual(resolveThinkingConfig(undefined), {
+		defaultThinkingLevel: "medium",
+		launchThinkingLevel: undefined,
+	});
+	assert.deepEqual(resolveThinkingConfig("high"), {
+		defaultThinkingLevel: "high",
+		launchThinkingLevel: "high",
+	});
+	assert.deepEqual(resolveThinkingConfig("not-a-level"), {
+		defaultThinkingLevel: "medium",
+		launchThinkingLevel: undefined,
+	});
 });
 
 test("resolvePiPromptOptions keeps top-level workflows interactive when stdin is a tty", () => {
