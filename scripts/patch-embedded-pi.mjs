@@ -2,13 +2,13 @@ import { spawnSync } from "node:child_process";
 import { existsSync, lstatSync, mkdirSync, readdirSync, readFileSync, readlinkSync, rmSync, statSync, symlinkSync, writeFileSync } from "node:fs";
 import { createRequire } from "node:module";
 import { homedir } from "node:os";
-import { delimiter, dirname, resolve } from "node:path";
+import { delimiter, dirname, isAbsolute, relative, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { FEYNMAN_LOGO_HTML } from "../logo.mjs";
 import { patchAlphaHubAuthSource } from "./lib/alpha-hub-auth-patch.mjs";
 import { patchPiAgentCoreSource } from "./lib/pi-agent-core-patch.mjs";
 import { patchPiExtensionLoaderSource } from "./lib/pi-extension-loader-patch.mjs";
-import { patchPiGoogleLegacySchemaSource } from "./lib/pi-google-legacy-schema-patch.mjs";
+import { patchPiTuiSource } from "./lib/pi-tui-patch.mjs";
 import { PI_WEB_ACCESS_PATCH_TARGETS, patchPiWebAccessSource } from "./lib/pi-web-access-patch.mjs";
 import { PI_SUBAGENTS_PATCH_TARGETS, patchPiSubagentsSource, stripPiSubagentBuiltinModelSource } from "./lib/pi-subagents-patch.mjs";
 
@@ -66,6 +66,7 @@ const interactiveModePath = piPackageRoot ? resolve(piPackageRoot, "dist", "mode
 const interactiveThemePath = piPackageRoot ? resolve(piPackageRoot, "dist", "modes", "interactive", "theme", "theme.js") : null;
 const extensionLoaderPath = piPackageRoot ? resolve(piPackageRoot, "dist", "core", "extensions", "loader.js") : null;
 const agentLoopPath = piAgentCoreRoot ? resolve(piAgentCoreRoot, "dist", "agent-loop.js") : null;
+const tuiPath = piTuiRoot ? resolve(piTuiRoot, "dist", "tui.js") : null;
 const terminalPath = piTuiRoot ? resolve(piTuiRoot, "dist", "terminal.js") : null;
 const editorPath = piTuiRoot ? resolve(piTuiRoot, "dist", "components", "editor.js") : null;
 const workspaceRoot = resolve(appRoot, ".feynman", "npm", "node_modules");
@@ -75,6 +76,13 @@ const workspaceAgentLoopPath = resolve(
 	"pi-agent-core",
 	"dist",
 	"agent-loop.js",
+);
+const workspaceTuiPath = resolve(
+	workspaceRoot,
+	"@mariozechner",
+	"pi-tui",
+	"dist",
+	"tui.js",
 );
 const workspaceExtensionLoaderPath = resolve(
 	workspaceRoot,
@@ -86,7 +94,6 @@ const workspaceExtensionLoaderPath = resolve(
 	"loader.js",
 );
 const piSubagentsRoot = resolve(workspaceRoot, "pi-subagents");
-const webAccessPath = resolve(workspaceRoot, "pi-web-access", "index.ts");
 const sessionSearchIndexerPath = resolve(
 	workspaceRoot,
 	"@kaiserlich-dev",
@@ -102,7 +109,7 @@ const workspaceManifestPath = resolve(workspaceDir, ".runtime-manifest.json");
 const workspaceArchivePath = resolve(appRoot, ".feynman", "runtime-workspace.tgz");
 const workspaceSetupLockDir = resolve(appRoot, ".feynman", ".workspace-setup.lock");
 const globalNodeModulesRoot = resolve(feynmanNpmPrefix, "lib", "node_modules");
-const PRUNE_VERSION = 3;
+const PRUNE_VERSION = 6;
 const WORKSPACE_SETUP_LOCK_STALE_MS = 300000;
 const NATIVE_PACKAGE_SPECS = new Set([
 	"@kaiserlich-dev/pi-session-search",
@@ -298,6 +305,11 @@ function linkPointsTo(linkPath, targetPath) {
 	}
 }
 
+function pathInsideRoot(path, root) {
+	const relativePath = relative(root, path);
+	return relativePath === "" || (!relativePath.startsWith("..") && !isAbsolute(relativePath));
+}
+
 function listWorkspacePackageNames(root) {
 	if (!existsSync(root)) return [];
 	const names = [];
@@ -315,6 +327,37 @@ function listWorkspacePackageNames(root) {
 		names.push(entry.name);
 	}
 	return names;
+}
+
+function removeEmptyScopeDirectory(packagePath, packageName) {
+	if (!packageName.startsWith("@")) return;
+
+	const scopePath = dirname(packagePath);
+	if (!pathInsideRoot(scopePath, globalNodeModulesRoot) || !existsSync(scopePath)) return;
+	if (readdirSync(scopePath).length > 0) return;
+
+	rmSync(scopePath, { recursive: true, force: true });
+}
+
+function pruneStaleBundledPackageLinks(currentPackageNames) {
+	if (!existsSync(globalNodeModulesRoot)) return;
+
+	const currentPackages = new Set(currentPackageNames);
+	for (const packageName of listWorkspacePackageNames(globalNodeModulesRoot)) {
+		const packagePath = resolve(globalNodeModulesRoot, packageName);
+		let linkedTarget;
+		try {
+			if (!lstatSync(packagePath).isSymbolicLink()) continue;
+			linkedTarget = resolve(dirname(packagePath), readlinkSync(packagePath));
+		} catch {
+			continue;
+		}
+		if (!pathInsideRoot(linkedTarget, workspaceRoot)) continue;
+		if (currentPackages.has(packageName) && existsSync(linkedTarget)) continue;
+
+		rmSync(packagePath, { force: true });
+		removeEmptyScopeDirectory(packagePath, packageName);
+	}
 }
 
 function linkBundledPackage(packageName) {
@@ -343,7 +386,9 @@ function linkBundledPackage(packageName) {
 function ensureBundledPackageLinks(packageSpecs) {
 	if (!workspaceMatchesRuntime(packageSpecs)) return;
 
-	for (const packageName of listWorkspacePackageNames(workspaceRoot)) {
+	const packageNames = listWorkspacePackageNames(workspaceRoot);
+	pruneStaleBundledPackageLinks(packageNames);
+	for (const packageName of packageNames) {
 		linkBundledPackage(packageName);
 	}
 }
@@ -665,6 +710,18 @@ for (const entryPath of [agentLoopPath, workspaceAgentLoopPath].filter(Boolean))
 	}
 }
 
+for (const entryPath of [tuiPath, workspaceTuiPath].filter(Boolean)) {
+	if (!existsSync(entryPath)) {
+		continue;
+	}
+
+	const source = readFileSync(entryPath, "utf8");
+	const patched = patchPiTuiSource(source);
+	if (patched !== source) {
+		writeFileSync(entryPath, patched, "utf8");
+	}
+}
+
 if (interactiveThemePath && existsSync(interactiveThemePath)) {
 	let themeSource = readFileSync(interactiveThemePath, "utf8");
 	const desiredGetEditorTheme = [
@@ -829,17 +886,6 @@ if (editorPath && existsSync(editorPath)) {
 	writeFileSync(editorPath, editorSource, "utf8");
 }
 
-if (existsSync(webAccessPath)) {
-	const source = readFileSync(webAccessPath, "utf8");
-	if (source.includes('pi.registerCommand("search",')) {
-		writeFileSync(
-			webAccessPath,
-			source.replace('pi.registerCommand("search",', 'pi.registerCommand("web-results",'),
-			"utf8",
-		);
-	}
-}
-
 const piWebAccessRoot = resolve(workspaceRoot, "pi-web-access");
 
 if (existsSync(piWebAccessRoot)) {
@@ -866,7 +912,6 @@ if (existsSync(sessionSearchIndexerPath)) {
 }
 
 const oauthPagePath = piAiRoot ? resolve(piAiRoot, "dist", "utils", "oauth", "oauth-page.js") : null;
-const googleSharedPath = piAiRoot ? resolve(piAiRoot, "dist", "providers", "google-shared.js") : null;
 
 if (oauthPagePath && existsSync(oauthPagePath)) {
 	let source = readFileSync(oauthPagePath, "utf8");
@@ -877,14 +922,6 @@ if (oauthPagePath && existsSync(oauthPagePath)) {
 		changed = true;
 	}
 	if (changed) writeFileSync(oauthPagePath, source, "utf8");
-}
-
-if (googleSharedPath && existsSync(googleSharedPath)) {
-	const source = readFileSync(googleSharedPath, "utf8");
-	const patched = patchPiGoogleLegacySchemaSource(source);
-	if (patched !== source) {
-		writeFileSync(googleSharedPath, patched, "utf8");
-	}
 }
 
 const alphaHubAuthPath = findPackageRoot("@companion-ai/alpha-hub")

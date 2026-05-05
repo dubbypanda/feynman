@@ -60,6 +60,24 @@ feynman model set anthropic/claude-opus-4-6
 
 The `model set` command accepts both `provider/model` and `provider:model` formats. `feynman model login google` opens the API-key flow directly, while `feynman model login amazon-bedrock` verifies the AWS credential chain that Pi uses for Bedrock access.
 
+## Web search configuration
+
+Research workflows use `~/.feynman/web-search.json` for web-search routing. The default `auto` route uses API-backed providers only: Exa, then Perplexity, then Gemini API. It does not read Chromium or Chrome cookies, so it should not trigger a macOS Keychain prompt.
+
+Example:
+
+```json
+{
+  "provider": "auto",
+  "searchProvider": "auto",
+  "exaApiKey": "exa_...",
+  "perplexityApiKey": "pplx-...",
+  "geminiApiKey": "AIza..."
+}
+```
+
+Gemini Web browser-cookie access is disabled by default. To opt into it, set `"geminiBrowser": true` in `web-search.json`; API-backed search is recommended for `/deepresearch`.
+
 ## Subagent model overrides
 
 Feynman's bundled subagents inherit the main default model unless you override them explicitly. Inside the REPL, run:

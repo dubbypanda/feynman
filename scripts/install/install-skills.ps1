@@ -1,6 +1,6 @@
 param(
   [string]$Version = "latest",
-  [ValidateSet("User", "Repo")]
+  [ValidateSet("User", "Repo", "OpenCode")]
   [string]$Scope = "User",
   [string]$TargetDir = ""
 )
@@ -63,6 +63,9 @@ function Resolve-InstallDir {
   if ($ResolvedScope -eq "Repo") {
     return Join-Path (Get-Location) ".agents\skills\feynman"
   }
+  if ($ResolvedScope -eq "OpenCode") {
+    return Join-Path (Get-Location) ".opencode\skills\feynman"
+  }
 
   $codexHome = if ($env:CODEX_HOME) { $env:CODEX_HOME } else { Join-Path $HOME ".codex" }
   return Join-Path $codexHome "skills\feynman"
@@ -116,6 +119,8 @@ try {
   Write-Host "==> Installed skills to $installDir"
   if ($Scope -eq "Repo") {
     Write-Host "Repo-local skills will be discovered automatically from .agents/skills."
+  } elseif ($Scope -eq "OpenCode") {
+    Write-Host "OpenCode project skills will be discovered from .opencode/skills."
   } else {
     Write-Host "User-level skills will be discovered from `$CODEX_HOME/skills."
   }

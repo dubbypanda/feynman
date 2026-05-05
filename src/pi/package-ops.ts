@@ -1,7 +1,7 @@
 import { spawn } from "node:child_process";
 import { cpSync, existsSync, lstatSync, mkdirSync, readdirSync, readFileSync, readlinkSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
-import { dirname, join, resolve } from "node:path";
+import { dirname, isAbsolute, join, relative, resolve } from "node:path";
 
 import { DefaultPackageManager, SettingsManager } from "@mariozechner/pi-coding-agent";
 
@@ -427,6 +427,11 @@ function pathsMatchSymlinkTarget(linkPath: string, targetPath: string): boolean 
 	}
 }
 
+function isPathInsideRoot(path: string, root: string): boolean {
+	const relativePath = relative(root, path);
+	return relativePath === "" || (!relativePath.startsWith("..") && !isAbsolute(relativePath));
+}
+
 function linkDirectory(linkPath: string, targetPath: string): void {
 	if (pathsMatchSymlinkTarget(linkPath, targetPath)) {
 		return;
@@ -477,6 +482,55 @@ function listBundledWorkspacePackageNames(root: string): string[] {
 		names.push(entry.name);
 	}
 	return names;
+}
+
+function removeEmptyScopeDirectory(packagePath: string, packageName: string, globalNodeModulesRoot: string): void {
+	if (!packageName.startsWith("@")) {
+		return;
+	}
+
+	const scopePath = dirname(packagePath);
+	if (!isPathInsideRoot(scopePath, globalNodeModulesRoot) || !existsSync(scopePath)) {
+		return;
+	}
+	if (readdirSync(scopePath).length > 0) {
+		return;
+	}
+
+	rmSync(scopePath, { recursive: true, force: true });
+}
+
+function pruneStaleBundledPackageLinks(
+	globalNodeModulesRoot: string,
+	bundledNodeModulesRoot: string,
+	bundledPackageNames: string[],
+): void {
+	if (!existsSync(globalNodeModulesRoot)) {
+		return;
+	}
+
+	const currentBundledPackages = new Set(bundledPackageNames);
+	for (const packageName of listBundledWorkspacePackageNames(globalNodeModulesRoot)) {
+		const packagePath = resolve(globalNodeModulesRoot, packageName);
+		let linkedTarget: string;
+		try {
+			if (!lstatSync(packagePath).isSymbolicLink()) {
+				continue;
+			}
+			linkedTarget = resolve(dirname(packagePath), readlinkSync(packagePath));
+		} catch {
+			continue;
+		}
+		if (!isPathInsideRoot(linkedTarget, bundledNodeModulesRoot)) {
+			continue;
+		}
+		if (currentBundledPackages.has(packageName) && existsSync(linkedTarget)) {
+			continue;
+		}
+
+		rmSync(packagePath, { force: true });
+		removeEmptyScopeDirectory(packagePath, packageName, globalNodeModulesRoot);
+	}
 }
 
 function packageDependencyExists(packagePath: string, globalNodeModulesRoot: string, dependency: string): boolean {
@@ -546,6 +600,7 @@ export function seedBundledWorkspacePackages(
 	const globalNodeModulesRoot = resolve(getFeynmanNpmPrefixPath(agentDir), "lib", "node_modules");
 	const seeded: string[] = [];
 	const bundledPackageNames = listBundledWorkspacePackageNames(bundledNodeModulesRoot);
+	pruneStaleBundledPackageLinks(globalNodeModulesRoot, bundledNodeModulesRoot, bundledPackageNames);
 	for (const packageName of bundledPackageNames) {
 		seedBundledPackage(globalNodeModulesRoot, bundledNodeModulesRoot, packageName);
 	}

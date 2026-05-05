@@ -103,12 +103,15 @@ resolve_target_dir() {
     repo)
       printf '%s/.agents/skills/feynman\n' "$PWD"
       ;;
+    opencode)
+      printf '%s/.opencode/skills/feynman\n' "$PWD"
+      ;;
     user)
       codex_home="${CODEX_HOME:-$HOME/.codex}"
       printf '%s/skills/feynman\n' "$codex_home"
       ;;
     *)
-      echo "Unknown scope: $SCOPE (expected --user or --repo)" >&2
+      echo "Unknown scope: $SCOPE (expected --user, --repo, or --opencode)" >&2
       exit 1
       ;;
   esac
@@ -119,12 +122,15 @@ while [ $# -gt 0 ]; do
     --repo)
       SCOPE="repo"
       ;;
+    --opencode)
+      SCOPE="opencode"
+      ;;
     --user)
       SCOPE="user"
       ;;
     --dir)
       if [ $# -lt 2 ]; then
-        echo "Usage: install-skills.sh [stable|latest|<version>] [--user|--repo] [--dir <path>]" >&2
+        echo "Usage: install-skills.sh [stable|latest|<version>] [--user|--repo|--opencode] [--dir <path>]" >&2
         exit 1
       fi
       TARGET_DIR="$2"
@@ -135,7 +141,7 @@ while [ $# -gt 0 ]; do
       ;;
     *)
       echo "Unknown argument: $1" >&2
-      echo "Usage: install-skills.sh [stable|latest|<version>] [--user|--repo] [--dir <path>]" >&2
+      echo "Usage: install-skills.sh [stable|latest|<version>] [--user|--repo|--opencode] [--dir <path>]" >&2
       exit 1
       ;;
   esac
@@ -201,6 +207,9 @@ step "Installed skills to $install_dir"
 case "$SCOPE" in
   repo)
     step "Repo-local skills will be discovered automatically from .agents/skills"
+    ;;
+  opencode)
+    step "OpenCode project skills will be discovered from .opencode/skills"
     ;;
   user)
     step "User-level skills will be discovered from \$CODEX_HOME/skills"

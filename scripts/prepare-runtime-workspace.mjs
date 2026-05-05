@@ -4,6 +4,8 @@ import { resolve } from "node:path";
 import { spawnSync } from "node:child_process";
 
 import { patchPiAgentCoreSource } from "./lib/pi-agent-core-patch.mjs";
+import { patchPiTuiSource } from "./lib/pi-tui-patch.mjs";
+import { PI_WEB_ACCESS_PATCH_TARGETS, patchPiWebAccessSource } from "./lib/pi-web-access-patch.mjs";
 import { PI_SUBAGENTS_PATCH_TARGETS, patchPiSubagentsSource, stripPiSubagentBuiltinModelSource } from "./lib/pi-subagents-patch.mjs";
 
 const appRoot = resolve(import.meta.dirname, "..");
@@ -16,7 +18,7 @@ const workspaceNodeModulesDir = resolve(workspaceDir, "node_modules");
 const manifestPath = resolve(workspaceDir, ".runtime-manifest.json");
 const workspacePackageJsonPath = resolve(workspaceDir, "package.json");
 const workspaceArchivePath = resolve(feynmanDir, "runtime-workspace.tgz");
-const PRUNE_VERSION = 4;
+const PRUNE_VERSION = 6;
 const PINNED_RUNTIME_PACKAGES = [
 	"@mariozechner/pi-agent-core",
 	"@mariozechner/pi-ai",
@@ -78,6 +80,8 @@ function getRuntimeInputHash() {
 		packageLockPath,
 		settingsPath,
 		resolve(appRoot, "scripts", "lib", "pi-agent-core-patch.mjs"),
+		resolve(appRoot, "scripts", "lib", "pi-tui-patch.mjs"),
+		resolve(appRoot, "scripts", "lib", "pi-web-access-patch.mjs"),
 		resolve(appRoot, "scripts", "lib", "pi-subagents-patch.mjs"),
 	]) {
 		hash.update(path);
@@ -243,6 +247,41 @@ function patchBundledPiAgentCore() {
 	return true;
 }
 
+function patchBundledPiTui() {
+	const tuiPath = resolve(workspaceNodeModulesDir, "@mariozechner", "pi-tui", "dist", "tui.js");
+	if (!existsSync(tuiPath)) {
+		return false;
+	}
+
+	const source = readFileSync(tuiPath, "utf8");
+	const patched = patchPiTuiSource(source);
+	if (patched === source) {
+		return false;
+	}
+	writeFileSync(tuiPath, patched, "utf8");
+	return true;
+}
+
+function patchBundledPiWebAccess() {
+	const piWebAccessRoot = resolve(workspaceNodeModulesDir, "pi-web-access");
+	if (!existsSync(piWebAccessRoot)) {
+		return false;
+	}
+
+	let changed = false;
+	for (const relativePath of PI_WEB_ACCESS_PATCH_TARGETS) {
+		const entryPath = resolve(piWebAccessRoot, relativePath);
+		if (!existsSync(entryPath)) continue;
+
+		const source = readFileSync(entryPath, "utf8");
+		const patched = patchPiWebAccessSource(relativePath, source);
+		if (patched === source) continue;
+		writeFileSync(entryPath, patched, "utf8");
+		changed = true;
+	}
+	return changed;
+}
+
 function archiveIsCurrent() {
 	if (!existsSync(workspaceArchivePath) || !existsSync(manifestPath)) {
 		return false;
@@ -266,7 +305,7 @@ const packageSpecs = readPackageSpecs();
 
 if (workspaceIsCurrent(packageSpecs)) {
 	console.log("[feynman] vendored runtime workspace already up to date");
-	if (patchBundledPiAgentCore() || patchBundledPiSubagents()) {
+	if (patchBundledPiAgentCore() || patchBundledPiTui() || patchBundledPiWebAccess() || patchBundledPiSubagents()) {
 		writeManifest(packageSpecs);
 		console.log("[feynman] patched bundled Pi runtime");
 	}
@@ -283,6 +322,8 @@ console.log("[feynman] preparing vendored runtime workspace...");
 prepareWorkspace(packageSpecs);
 pruneWorkspace();
 patchBundledPiAgentCore();
+patchBundledPiTui();
+patchBundledPiWebAccess();
 patchBundledPiSubagents();
 writeManifest(packageSpecs);
 createWorkspaceArchive();

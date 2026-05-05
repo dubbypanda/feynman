@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { appendFileSync, existsSync, lstatSync, mkdtempSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { appendFileSync, existsSync, lstatSync, mkdtempSync, mkdirSync, readFileSync, symlinkSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 
@@ -106,6 +106,31 @@ test("seedBundledWorkspacePackages repairs broken existing bundled packages", ()
 		readFileSync(resolve(existingPackageDir, "package.json"), "utf8").includes('"version": "1.0.0"'),
 		true,
 	);
+});
+
+test("seedBundledWorkspacePackages prunes stale links from previous bundled runtimes", () => {
+	const appRoot = mkdtempSync(join(tmpdir(), "feynman-bundle-"));
+	const homeRoot = mkdtempSync(join(tmpdir(), "feynman-home-"));
+	const agentDir = resolve(homeRoot, "agent");
+	const globalRoot = resolve(homeRoot, "npm-global", "lib", "node_modules");
+	const stalePackagePath = resolve(globalRoot, "@opentelemetry", "api");
+	const externalPackagePath = resolve(globalRoot, "@external", "kept");
+	const externalTarget = resolve(homeRoot, "external", "kept");
+
+	mkdirSync(agentDir, { recursive: true });
+	mkdirSync(resolve(globalRoot, "@opentelemetry"), { recursive: true });
+	mkdirSync(resolve(globalRoot, "@external"), { recursive: true });
+	mkdirSync(externalTarget, { recursive: true });
+	createBundledWorkspace(appRoot, ["pi-subagents"]);
+	symlinkSync(resolve(appRoot, ".feynman", "npm", "node_modules", "@opentelemetry", "api"), stalePackagePath, "dir");
+	symlinkSync(externalTarget, externalPackagePath, "dir");
+
+	const seeded = seedBundledWorkspacePackages(agentDir, appRoot, ["npm:pi-subagents"]);
+
+	assert.deepEqual(seeded, ["npm:pi-subagents"]);
+	assert.equal(existsSync(stalePackagePath), false);
+	assert.equal(existsSync(resolve(globalRoot, "@opentelemetry")), false);
+	assert.equal(lstatSync(externalPackagePath).isSymbolicLink(), true);
 });
 
 test("installPackageSources filters noisy npm chatter but preserves meaningful output", async () => {

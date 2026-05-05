@@ -22,7 +22,10 @@ export function printSearchStatus(status = getPiWebAccessStatus()): void {
 	printInfo(`Perplexity API configured: ${status.perplexityConfigured ? "yes" : "no"}`);
 	printInfo(`Exa API configured: ${status.exaConfigured ? "yes" : "no"}`);
 	printInfo(`Gemini API configured: ${status.geminiApiConfigured ? "yes" : "no"}`);
-	printInfo(`Browser profile: ${status.chromeProfile ?? "default Chromium profile"}`);
+	printInfo(`Gemini browser fallback: ${status.geminiBrowserEnabled ? "enabled" : "disabled"}`);
+	if (status.geminiBrowserEnabled && status.chromeProfile) {
+		printInfo(`Gemini browser profile: ${status.chromeProfile}`);
+	}
 	printInfo(`Config path: ${status.configPath}${configPathSuffix}`);
 	if (!status.configExists) {
 		printInfo("Not configured yet. Run one of:");
@@ -45,6 +48,7 @@ export function setSearchProvider(provider: PiWebSearchProvider, apiKey?: string
 		provider,
 		searchProvider: provider,
 		workflow: "none",
+		geminiBrowser: false,
 		route: undefined,
 	};
 	const apiKeyField = PROVIDER_API_KEY_FIELDS[provider];
@@ -59,7 +63,13 @@ export function setSearchProvider(provider: PiWebSearchProvider, apiKey?: string
 }
 
 export function clearSearchConfig(): void {
-	savePiWebAccessConfig({ provider: undefined, searchProvider: undefined, route: undefined, workflow: "none" });
+	savePiWebAccessConfig({
+		provider: undefined,
+		searchProvider: undefined,
+		route: undefined,
+		workflow: "none",
+		geminiBrowser: false,
+	});
 
 	const status = getPiWebAccessStatus();
 	console.log(`Web search provider reset to ${status.routeLabel}.`);

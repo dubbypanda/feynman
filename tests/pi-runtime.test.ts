@@ -49,8 +49,16 @@ test("buildPiArgs omits thinking arg when launch thinking is not explicit", () =
 test("buildPiEnv wires Feynman paths into the Pi environment", () => {
 	const previousUppercasePrefix = process.env.NPM_CONFIG_PREFIX;
 	const previousLowercasePrefix = process.env.npm_config_prefix;
+	const previousOtelServiceName = process.env.OTEL_SERVICE_NAME;
+	const previousOtelServiceVersion = process.env.OTEL_SERVICE_VERSION;
+	const previousPiOtelServiceName = process.env.PI_OTEL_SERVICE_NAME;
+	const previousPiOtelServiceVersion = process.env.PI_OTEL_SERVICE_VERSION;
 	process.env.NPM_CONFIG_PREFIX = "/tmp/global-prefix";
 	process.env.npm_config_prefix = "/tmp/global-prefix-lower";
+	delete process.env.OTEL_SERVICE_NAME;
+	delete process.env.OTEL_SERVICE_VERSION;
+	delete process.env.PI_OTEL_SERVICE_NAME;
+	delete process.env.PI_OTEL_SERVICE_VERSION;
 
 	const env = buildPiEnv({
 		appRoot: "/repo/feynman",
@@ -70,6 +78,8 @@ test("buildPiEnv wires Feynman paths into the Pi environment", () => {
 		assert.equal(env.npm_config_prefix, "/home/.feynman/npm-global");
 		assert.equal(env.FEYNMAN_CODING_AGENT_DIR, "/home/.feynman/agent");
 		assert.equal(env.PI_CODING_AGENT_DIR, "/home/.feynman/agent");
+		assert.equal(env.OTEL_SERVICE_NAME, undefined);
+		assert.equal(env.OTEL_SERVICE_VERSION, undefined);
 		assert.ok(
 			env.PATH?.startsWith(
 				"/repo/feynman/node_modules/.bin:/repo/feynman/.feynman/npm/node_modules/.bin:/home/.feynman/npm-global/bin:",
@@ -85,6 +95,26 @@ test("buildPiEnv wires Feynman paths into the Pi environment", () => {
 			delete process.env.npm_config_prefix;
 		} else {
 			process.env.npm_config_prefix = previousLowercasePrefix;
+		}
+		if (previousOtelServiceName === undefined) {
+			delete process.env.OTEL_SERVICE_NAME;
+		} else {
+			process.env.OTEL_SERVICE_NAME = previousOtelServiceName;
+		}
+		if (previousOtelServiceVersion === undefined) {
+			delete process.env.OTEL_SERVICE_VERSION;
+		} else {
+			process.env.OTEL_SERVICE_VERSION = previousOtelServiceVersion;
+		}
+		if (previousPiOtelServiceName === undefined) {
+			delete process.env.PI_OTEL_SERVICE_NAME;
+		} else {
+			process.env.PI_OTEL_SERVICE_NAME = previousPiOtelServiceName;
+		}
+		if (previousPiOtelServiceVersion === undefined) {
+			delete process.env.PI_OTEL_SERVICE_VERSION;
+		} else {
+			process.env.PI_OTEL_SERVICE_VERSION = previousPiOtelServiceVersion;
 		}
 	}
 });

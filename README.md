@@ -69,6 +69,22 @@ curl -fsSL https://feynman.is/install-skills | bash -s -- --repo
 
 That installs into `.agents/skills/feynman` under the current repository.
 
+For an OpenCode project-local install instead:
+
+**macOS / Linux:**
+
+```bash
+curl -fsSL https://feynman.is/install-skills | bash -s -- --opencode
+```
+
+**Windows (PowerShell):**
+
+```powershell
+& ([scriptblock]::Create((irm https://feynman.is/install-skills.ps1))) -Scope OpenCode
+```
+
+That installs into `.opencode/skills/feynman` under the current repository.
+
 These installers download the bundled `skills/` and `prompts/` trees plus the repo guidance files referenced by those skills. They do not install the Feynman terminal, bundled Node runtime, auth storage, or Pi packages.
 
 ---
@@ -128,7 +144,7 @@ Four bundled research agents, dispatched automatically.
 
 - **[AlphaXiv](https://www.alphaxiv.org/)** — paper search, Q&A, code reading, annotations (via `alpha` CLI)
 - **Docker** — isolated container execution for safe experiments on your machine
-- **Web search** — Gemini or Perplexity, zero-config default
+- **Web search** — Exa, Perplexity, or Gemini API; no Chromium cookie access by default
 - **Session search** — indexed recall across prior research sessions
 - **Preview** — browser and PDF export of generated artifacts
 - **Modal** — serverless GPU compute for burst training and inference

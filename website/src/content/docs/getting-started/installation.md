@@ -98,6 +98,12 @@ For a repo-local install into `.agents/skills/feynman` under the current reposit
 curl -fsSL https://feynman.is/install-skills | bash -s -- --repo
 ```
 
+For an OpenCode project-local install into `.opencode/skills/feynman`:
+
+```bash
+curl -fsSL https://feynman.is/install-skills | bash -s -- --opencode
+```
+
 On Windows, install the skills into your Codex skill directory:
 
 ```powershell
@@ -108,6 +114,12 @@ Or install them repo-locally:
 
 ```powershell
 & ([scriptblock]::Create((irm https://feynman.is/install-skills.ps1))) -Scope Repo
+```
+
+Or install them into an OpenCode project:
+
+```powershell
+& ([scriptblock]::Create((irm https://feynman.is/install-skills.ps1))) -Scope OpenCode
 ```
 
 These installers download the bundled `skills/` and `prompts/` trees plus the repo guidance files referenced by those skills. They do not install the Feynman terminal, bundled Node runtime, auth storage, or Pi packages.

@@ -9,10 +9,11 @@ Feynman is built on the Pi runtime and uses curated Pi packages for its capabili
 
 ## Core packages
 
-These are installed by default with every Feynman installation. They provide the foundation for all research workflows.
+These are installed by default with every Feynman installation. They provide the foundation for research workflows while still letting Pi own the underlying runtime, RPC transport, provider model, and package loader.
 
 | Package | Purpose |
 | --- | --- |
+| `@companion-ai/alpha-hub` | Direct alphaXiv tools for paper and author workflows |
 | `pi-subagents` | Parallel agent spawning for literature gathering and task decomposition. Powers the multi-agent workflows |
 | `pi-btw` | Fast side-thread `/btw` conversations without interrupting the main research run |
 | `pi-docparser` | Parse PDFs, Office documents, spreadsheets, and images for content extraction |

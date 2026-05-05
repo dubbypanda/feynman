@@ -14,6 +14,9 @@ export type PiWebAccessConfig = Record<string, unknown> & {
 	exaApiKey?: string;
 	geminiApiKey?: string;
 	chromeProfile?: string;
+	geminiBrowser?: boolean;
+	allowBrowserAuth?: boolean;
+	browserAuth?: boolean;
 };
 
 export type PiWebAccessStatus = {
@@ -26,6 +29,7 @@ export type PiWebAccessStatus = {
 	exaConfigured: boolean;
 	geminiApiConfigured: boolean;
 	chromeProfile?: string;
+	geminiBrowserEnabled: boolean;
 	routeLabel: string;
 	note: string;
 };
@@ -45,6 +49,13 @@ function normalizeWorkflow(value: unknown): PiWebSearchWorkflow | undefined {
 
 function normalizeNonEmptyString(value: unknown): string | undefined {
 	return typeof value === "string" && value.trim().length > 0 ? value.trim() : undefined;
+}
+
+function normalizeBooleanFlag(value: unknown): boolean {
+	if (value === true) return true;
+	if (typeof value !== "string") return false;
+	const normalized = value.trim().toLowerCase();
+	return normalized === "1" || normalized === "true" || normalized === "yes" || normalized === "on";
 }
 
 export function loadPiWebAccessConfig(configPath = getPiWebSearchConfigPath()): PiWebAccessConfig {
@@ -97,9 +108,9 @@ function formatRouteNote(provider: PiWebSearchProvider): string {
 		case "exa":
 			return "Pi web-access will use Exa for search.";
 		case "gemini":
-			return "Pi web-access will use Gemini API or Gemini Browser.";
+			return "Pi web-access will use Gemini API. Browser-cookie fallback is opt-in.";
 		default:
-			return "Pi web-access will try Perplexity, then Exa, then Gemini API, then Gemini Browser.";
+			return "Pi web-access will try Exa, then Perplexity, then Gemini API. Browser-cookie fallback is opt-in.";
 	}
 }
 
@@ -115,6 +126,7 @@ export function getPiWebAccessStatus(
 	const exaConfigured = Boolean(normalizeNonEmptyString(config.exaApiKey));
 	const geminiApiConfigured = Boolean(normalizeNonEmptyString(config.geminiApiKey));
 	const chromeProfile = normalizeNonEmptyString(config.chromeProfile);
+	const geminiBrowserEnabled = normalizeBooleanFlag(config.geminiBrowser ?? config.allowBrowserAuth ?? config.browserAuth);
 	const effectiveProvider = searchProvider;
 
 	return {
@@ -127,6 +139,7 @@ export function getPiWebAccessStatus(
 		exaConfigured,
 		geminiApiConfigured,
 		chromeProfile,
+		geminiBrowserEnabled,
 		routeLabel: formatRouteLabel(effectiveProvider),
 		note: formatRouteNote(effectiveProvider),
 	};
@@ -144,10 +157,13 @@ export function formatPiWebAccessDoctorLines(
 		`  perplexity api: ${status.perplexityConfigured ? "configured" : "not configured"}`,
 		`  exa api: ${status.exaConfigured ? "configured" : "not configured"}`,
 		`  gemini api: ${status.geminiApiConfigured ? "configured" : "not configured"}`,
-		`  browser profile: ${status.chromeProfile ?? "default Chromium profile"}`,
+		`  gemini browser fallback: ${status.geminiBrowserEnabled ? "enabled" : "disabled"}`,
 		`  config path: ${status.configPath}${configPathSuffix}`,
 		`  note: ${status.note}`,
 	];
+	if (status.geminiBrowserEnabled && status.chromeProfile) {
+		lines.splice(8, 0, `  gemini browser profile: ${status.chromeProfile}`);
+	}
 	if (!status.configExists) {
 		lines.push("  hint: run `feynman search set <auto|perplexity|exa|gemini> [api-key]` to configure web search");
 	}

@@ -91,7 +91,12 @@ export function readJson(path: string): Record<string, unknown> {
 
 	try {
 		return JSON.parse(readFileSync(path, "utf8"));
-	} catch {
+	} catch (error) {
+		if (process.env.FEYNMAN_DEBUG === "1") {
+			process.stderr.write(
+				`[feynman] warning: failed to parse ${path}, treating as empty (${error instanceof Error ? error.message : "unknown error"})\n`,
+			);
+		}
 		return {};
 	}
 }

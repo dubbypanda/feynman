@@ -21,6 +21,7 @@ export type PiRuntimeOptions = {
 	explicitModelSpec?: string;
 	oneShotPrompt?: string;
 	initialPrompt?: string;
+	preLaunchNotice?: string;
 };
 
 export function getFeynmanNpmPrefixPath(feynmanAgentDir: string): string {
@@ -128,7 +129,6 @@ export function buildPiEnv(
 	const mermaidPath = process.env.MERMAID_CLI_PATH ?? executables?.mermaid ?? resolveExecutable("mmdc", MERMAID_FALLBACK_PATHS);
 	const browserPath =
 		process.env.PUPPETEER_EXECUTABLE_PATH ?? executables?.browser ?? resolveExecutable("google-chrome", BROWSER_FALLBACK_PATHS);
-
 	return {
 		...process.env,
 		PATH: `${binPath}${delimiter}${currentPath}`,

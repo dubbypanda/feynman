@@ -76,6 +76,35 @@ test("normalizeFeynmanSettings prunes the legacy slow default package set", () =
 	assert.deepEqual(settings.packages, [...CORE_PACKAGE_SOURCES]);
 });
 
+test("normalizeFeynmanSettings prunes the removed telemetry default package", () => {
+	const root = mkdtempSync(join(tmpdir(), "feynman-settings-"));
+	const settingsPath = join(root, "settings.json");
+	const bundledSettingsPath = join(root, "bundled-settings.json");
+	const authPath = join(root, "auth.json");
+
+	writeFileSync(
+		settingsPath,
+		JSON.stringify(
+			{
+				packages: [
+					...CORE_PACKAGE_SOURCES,
+					"npm:@devkade/pi-opentelemetry",
+				],
+			},
+			null,
+			2,
+		) + "\n",
+		"utf8",
+	);
+	writeFileSync(bundledSettingsPath, "{}\n", "utf8");
+	writeFileSync(authPath, "{}\n", "utf8");
+
+	normalizeFeynmanSettings(settingsPath, bundledSettingsPath, "medium", authPath);
+
+	const settings = JSON.parse(readFileSync(settingsPath, "utf8")) as { packages?: string[] };
+	assert.deepEqual(settings.packages, [...CORE_PACKAGE_SOURCES]);
+});
+
 test("optional package presets map friendly aliases", () => {
 	assert.deepEqual(getOptionalPackagePresetSources("memory"), undefined);
 	assert.deepEqual(getOptionalPackagePresetSources("ui", "darwin"), ["npm:pi-generative-ui"]);

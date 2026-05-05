@@ -13,15 +13,16 @@ Feynman supports three web search backends. You can configure which one to use o
 
 | Mode | Description |
 | --- | --- |
-| `auto` | Prefer Perplexity when configured, fall back to Gemini |
+| `auto` | Prefer Exa when configured, then Perplexity, then Gemini API |
 | `perplexity` | Force Perplexity Sonar for all web searches |
-| `gemini` | Force Gemini grounding (default, zero-config) |
+| `exa` | Force Exa for all web searches |
+| `gemini` | Force Gemini API grounding |
 
 ## Default behavior
 
-The default path is zero-config Gemini grounding via a signed-in Chromium profile. No API keys are required. This works on macOS and Linux where a Chromium-based browser is installed and signed in to a Google account.
+The default path does not read Chromium or Chrome cookies and does not request macOS Keychain access. In `auto` mode, Feynman uses API-backed search providers when they are configured: Exa first, then Perplexity, then Gemini API.
 
-For headless environments, CI pipelines, or servers without a browser, configure an explicit API key for either Perplexity or Gemini in `~/.feynman/web-search.json`.
+Configure an explicit API key for Exa, Perplexity, or Gemini in `~/.feynman/web-search.json` before running source-heavy workflows like `/deepresearch`.
 
 ## Configuration
 
@@ -35,13 +36,17 @@ Edit `~/.feynman/web-search.json` to configure the backend:
 
 ```json
 {
-  "route": "auto",
+  "provider": "auto",
+  "searchProvider": "auto",
+  "exaApiKey": "exa_...",
   "perplexityApiKey": "pplx-...",
   "geminiApiKey": "AIza..."
 }
 ```
 
-Set `route` to `auto`, `perplexity`, or `gemini`. When using `auto`, Feynman prefers Perplexity if a key is present, then falls back to Gemini.
+Set `provider` and `searchProvider` to `auto`, `exa`, `perplexity`, or `gemini`. When using `auto`, Feynman prefers Exa if a key is present, then Perplexity, then Gemini API. You can also run `feynman search set <provider> [api-key]` to write this file.
+
+Gemini Web browser-cookie access is disabled by default. To opt into that legacy fallback, add `"geminiBrowser": true` to `~/.feynman/web-search.json`. On macOS, that can trigger a Keychain prompt from the browser's cookie store, so API keys are the recommended route.
 
 ## Search features
 

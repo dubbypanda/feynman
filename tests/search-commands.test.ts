@@ -45,6 +45,10 @@ test("printSearchStatus marks config path and prints setup hint when web-search.
 		output.some((line) => line.toLowerCase().includes("feynman search set")),
 		"expected a hint referencing `feynman search set`",
 	);
+	assert.ok(
+		output.some((line) => line.includes("Gemini browser fallback: disabled")),
+		"expected Gemini browser fallback to be disabled by default",
+	);
 });
 
 test("printSearchStatus omits marker and hint when web-search.json exists", () => {

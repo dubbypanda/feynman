@@ -17,6 +17,28 @@ export const CORE_PACKAGE_SOURCES = [
 	"npm:@tmustier/pi-ralph-wiggum",
 ] as const;
 
+const LEGACY_CORE_PACKAGE_SOURCES = [
+	"npm:@companion-ai/alpha-hub",
+	"npm:pi-subagents",
+	"npm:pi-btw",
+	"npm:pi-docparser",
+	"npm:pi-web-access",
+	"npm:pi-markdown-preview",
+	"npm:@walterra/pi-charts",
+	"npm:pi-mermaid",
+	"npm:@aliou/pi-processes",
+	"npm:pi-zotero",
+	"npm:@kaiserlich-dev/pi-session-search",
+	"npm:pi-schedule-prompt",
+	"npm:@samfp/pi-memory",
+	"npm:@tmustier/pi-ralph-wiggum",
+] as const;
+
+const LEGACY_TELEMETRY_CORE_PACKAGE_SOURCES = [
+	...CORE_PACKAGE_SOURCES,
+	"npm:@devkade/pi-opentelemetry",
+] as const;
+
 export const NATIVE_PACKAGE_SOURCES = [
 	"npm:@kaiserlich-dev/pi-session-search",
 	"npm:@samfp/pi-memory",
@@ -42,6 +64,27 @@ export const OPTIONAL_PACKAGE_PRESETS = {
 export type OptionalPackagePresetName = keyof typeof OPTIONAL_PACKAGE_PRESETS;
 export type OptionalPackagePresetAlias = OptionalPackagePresetName | "ui" | "all-extras";
 
+const LEGACY_DEFAULT_PACKAGE_SETS = [
+	[
+		...CORE_PACKAGE_SOURCES,
+		"npm:pi-generative-ui",
+	],
+	[
+		...LEGACY_TELEMETRY_CORE_PACKAGE_SOURCES,
+	],
+	[
+		...LEGACY_TELEMETRY_CORE_PACKAGE_SOURCES,
+		"npm:pi-generative-ui",
+	],
+	[
+		...LEGACY_CORE_PACKAGE_SOURCES,
+	],
+	[
+		...LEGACY_CORE_PACKAGE_SOURCES,
+		"npm:pi-generative-ui",
+	],
+] as const;
+
 const LEGACY_DEFAULT_PACKAGE_SOURCES = [
 	...CORE_PACKAGE_SOURCES,
 	"npm:pi-generative-ui",
@@ -63,7 +106,9 @@ export function shouldPruneLegacyDefaultPackages(packages: PackageSource[] | und
 	if (packages.some((entry) => typeof entry !== "string")) {
 		return false;
 	}
-	return arraysMatchAsSets(packages as string[], LEGACY_DEFAULT_PACKAGE_SOURCES);
+	return LEGACY_DEFAULT_PACKAGE_SETS.some((legacySources) =>
+		arraysMatchAsSets(packages as string[], legacySources),
+	) || arraysMatchAsSets(packages as string[], LEGACY_DEFAULT_PACKAGE_SOURCES);
 }
 
 function parseNodeMajor(version: string): number {

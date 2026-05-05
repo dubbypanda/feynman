@@ -4,10 +4,16 @@ import { mkdtempSync, readFileSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 
-import { appendWorkflowFlagPositionals, resolveInitialPrompt, resolvePiPromptOptions, resolveThinkingConfig, shouldRunInteractiveSetup } from "../src/cli.js";
+import {
+	appendWorkflowFlagPositionals,
+	buildLocalModelWorkflowNotice,
+	resolveInitialPrompt,
+	resolvePiPromptOptions,
+	resolveThinkingConfig,
+	shouldRunInteractiveSetup,
+} from "../src/cli.js";
 import { buildModelStatusSnapshotFromRecords, chooseRecommendedModel, getAvailableModelRecords } from "../src/model/catalog.js";
-import { resolveModelProviderForCommand, setDefaultModelSpec } from "../src/model/commands.js";
-import { createModelRegistry } from "../src/model/registry.js";
+import { isLocalModelProvider, resolveModelProviderForCommand, setDefaultModelSpec } from "../src/model/commands.js";
 
 function createAuthPath(contents: Record<string, unknown>): string {
 	const root = mkdtempSync(join(tmpdir(), "feynman-auth-"));
@@ -55,17 +61,6 @@ test("getAvailableModelRecords keeps unexpired OAuth credentials available", () 
 	const available = getAvailableModelRecords(authPath);
 
 	assert.equal(available.some((model) => model.provider === "anthropic"), true);
-});
-
-test("createModelRegistry overlays new Anthropic Opus model before upstream Pi updates", () => {
-	const authPath = createAuthPath({
-		anthropic: { type: "api_key", key: "anthropic-test-key" },
-	});
-
-	const registry = createModelRegistry(authPath);
-
-	assert.ok(registry.find("anthropic", "claude-opus-4-7"));
-	assert.equal(registry.getAvailable().some((model) => model.provider === "anthropic" && model.id === "claude-opus-4-7"), true);
 });
 
 test("setDefaultModelSpec accepts a unique bare model id from authenticated models", () => {
@@ -194,6 +189,33 @@ test("chooseRecommendedModel prefers MiniMax M2.7 over highspeed when that is th
 	}
 });
 
+test("chooseRecommendedModel prefers kimi-for-coding when Kimi Coding is the authenticated provider", () => {
+	const envKeys = ["ANTHROPIC_API_KEY", "OPENAI_API_KEY", "GOOGLE_API_KEY", "GEMINI_API_KEY", "OPENROUTER_API_KEY"];
+	const savedEnv = Object.fromEntries(envKeys.map((key) => [key, process.env[key]]));
+
+	for (const key of envKeys) {
+		delete process.env[key];
+	}
+
+	try {
+		const authPath = createAuthPath({
+			"kimi-coding": { type: "api_key", key: "kimi-test-key" },
+		});
+
+		const recommendation = chooseRecommendedModel(authPath);
+
+		assert.equal(recommendation?.spec, "kimi-coding/kimi-for-coding");
+	} finally {
+		for (const [key, value] of Object.entries(savedEnv)) {
+			if (value === undefined) {
+				delete process.env[key];
+			} else {
+				process.env[key] = value;
+			}
+		}
+	}
+});
+
 test("resolveInitialPrompt maps top-level research commands to Pi slash workflows", () => {
 	const workflows = new Set([
 		"lit",
@@ -297,4 +319,40 @@ test("shouldRunInteractiveSetup skips onboarding for explicit model overrides or
 
 	assert.equal(shouldRunInteractiveSetup("openai/gpt-5.4", undefined, true, authPath), false);
 	assert.equal(shouldRunInteractiveSetup(undefined, undefined, false, authPath), false);
+});
+
+test("isLocalModelProvider flags known local provider ids without consulting models.json", () => {
+	const authPath = createAuthPath({});
+
+	assert.equal(isLocalModelProvider(authPath, "ollama"), true);
+	assert.equal(isLocalModelProvider(authPath, "lm-studio"), true);
+	assert.equal(isLocalModelProvider(authPath, "vllm"), true);
+	assert.equal(isLocalModelProvider(authPath, "anthropic"), false);
+	assert.equal(isLocalModelProvider(authPath, ""), false);
+});
+
+test("isLocalModelProvider flags custom providers whose models.json baseUrl points at localhost", () => {
+	const authPath = createAuthPath({});
+	const modelsJsonPath = join(authPath, "..", "models.json");
+	writeFileSync(
+		modelsJsonPath,
+		JSON.stringify({
+			providers: {
+				"my-proxy": { baseUrl: "http://127.0.0.1:8000/v1" },
+				openrouter: { baseUrl: "https://openrouter.ai/api/v1" },
+			},
+		}) + "\n",
+		"utf8",
+	);
+
+	assert.equal(isLocalModelProvider(authPath, "my-proxy"), true);
+	assert.equal(isLocalModelProvider(authPath, "openrouter"), false);
+});
+
+test("buildLocalModelWorkflowNotice names the configured model and the workflow", () => {
+	const notice = buildLocalModelWorkflowNotice("ollama/gemma4:latest", "deepresearch");
+
+	assert.ok(notice.includes("ollama/gemma4:latest"));
+	assert.ok(notice.includes("/deepresearch"));
+	assert.ok(notice.includes("feynman model set"));
 });
