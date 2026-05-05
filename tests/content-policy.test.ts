@@ -127,6 +127,15 @@ test("deepresearch requires post-edit verification before claiming fixes landed"
 	assert.match(deepResearchPrompt, /verify that any fixes claimed in the provenance are reflected in the final candidate/i);
 });
 
+test("lit workflow recovers from plan edit JSON failures", () => {
+	const litPrompt = readFileSync(join(repoRoot, "prompts", "lit.md"), "utf8");
+
+	assert.match(litPrompt, /outputs\/\.plans\/<slug>\.md/i);
+	assert.match(litPrompt, /JSON parse error/i);
+	assert.match(litPrompt, /rewrite the full corrected plan file/i);
+	assert.match(litPrompt, /continue to final artifact\/provenance verification/i);
+});
+
 test("deepresearch keeps subagent tool calls small and skips subagents for narrow explainers", () => {
 	const deepResearchPrompt = readFileSync(join(repoRoot, "prompts", "deepresearch.md"), "utf8");
 
