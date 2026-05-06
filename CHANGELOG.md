@@ -15,6 +15,15 @@ Use this file to track chronology, not release notes. Keep entries short, factua
 - Blockers: ...
 - Next: ...
 
+### 2026-05-06 03:34 PDT — web-search-config-perms
+
+- Objective: Integrate the remaining open PR for web-search credential file permissions and ship it through the npm release path.
+- Changed: Restricted `.feynman/web-search.json` to `0600` after writes, added POSIX regression coverage, bumped the package to `0.2.43`, and added release notes.
+- Verified: Focused `pi-web-access` test passed; final post-bump `npm test` passed with 154/154; typecheck, build, diff check, package-lock version check, and `npm pack --dry-run` passed.
+- Failed / learned: A code-only commit would not publish because `0.2.42` was already on npm, so this fix needs a version bump.
+- Blockers: Need push, GitHub Actions release confirmation, and PR #154 closure.
+- Next: Push `main`, watch the release workflow, then close PR #154 as integrated.
+
 ### 2026-05-06 00:00 local — github-issues-150-153
 
 - Objective: Read the current Feynman GitHub issues and fix the open tracker items end to end.

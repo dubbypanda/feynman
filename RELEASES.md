@@ -4,6 +4,19 @@ This file is the public release history for Feynman. Keep entries user-facing: w
 
 GitHub release notes are generated from the matching `## vX.Y.Z` section in this file.
 
+## v0.2.43 - 2026-05-06
+
+### Fixes
+
+- Restricted `.feynman/web-search.json` permissions to user-only (`0600`) after Feynman writes web-search provider configuration.
+- This protects stored web-search API keys such as Exa, Perplexity, and Gemini keys from permissive local umasks.
+
+### Validation
+
+- Added POSIX regression coverage for saved web-search config permissions.
+- Full local tests passed: 154/154.
+- Typecheck and build passed.
+
 ## v0.2.42 - 2026-05-06
 
 ### Fixes
