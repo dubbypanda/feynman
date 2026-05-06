@@ -70,7 +70,6 @@ jobs:
       - verify
     if: needs.version-check.outputs.should_publish_npm == 'true' && needs.verify.result == 'success'
     runs-on: ubuntu-latest
-    continue-on-error: true
     permissions:
       contents: read
       id-token: write
