@@ -126,7 +126,6 @@ jobs:
   release-github:
     needs:
       - version-check
-      - publish-npm
       - build-native-bundles
     if: needs.version-check.outputs.should_release == 'true' && needs.build-native-bundles.result == 'success'
     runs-on: ubuntu-latest
