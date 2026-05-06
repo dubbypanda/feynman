@@ -78,11 +78,8 @@ jobs:
       - uses: actions/setup-node@v6
         with:
           node-version: 22
-          registry-url: "https://registry.npmjs.org"
       - run: npm ci
-      - run: npm publish --access public
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+      - run: npx npm@latest publish --access public
 
   build-native-bundles:
     needs: version-check
