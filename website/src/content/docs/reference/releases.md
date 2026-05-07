@@ -7,6 +7,17 @@ order: 4
 
 This page summarizes what changed in recent Feynman releases. GitHub releases use the same version-specific notes from the repository `RELEASES.md` file.
 
+## v0.2.49 - 2026-05-07
+
+### Website
+
+- Updated the website build stack to patched Astro 6/Vite 7.
+- Migrated docs content collections to Astro's current content-layer config.
+
+### Validation
+
+- Website build and website production audit passed.
+
 ## v0.2.48 - 2026-05-07
 
 ### Fixes
@@ -24,7 +35,7 @@ This page summarizes what changed in recent Feynman releases. GitHub releases us
 ### Validation
 
 - Full local tests passed: 157/157.
-- Typecheck, root build, website build, production `npm audit --omit=dev`, and package dry-run passed.
+- Typecheck, root build, website build, native bundle build, production `npm audit --omit=dev`, and package dry-run passed.
 - Package dry-run verified the bundled runtime workspace excludes memory and session search by default.
 
 ## v0.2.47 - 2026-05-07

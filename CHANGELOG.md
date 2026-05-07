@@ -15,6 +15,15 @@ Use this file to track chronology, not release notes. Keep entries short, factua
 - Blockers: ...
 - Next: ...
 
+### 2026-05-07 15:05 PDT — node24-core-researcher
+
+- Objective: Fix the Node 24 regression from the default Pi package set while keeping Feynman focused on the core AI researcher path.
+- Changed: Restored Node 24 support, slimmed default packages to alphaXiv/subagents/doc parsing/web access, moved memory and session search to optional presets, and upgraded the website stack to patched Astro 6/Vite 7 with the current content-layer config.
+- Verified: Root build, typecheck, full tests, package dry-run, native bundle build, website build/typecheck/lint, and production audits passed locally.
+- Failed / learned: The native bundle and website build still had stale assumptions: native validation expected `better-sqlite3`, and the Astro 6 upgrade needed the Vite override lifted to Vite 7 before static pages rendered.
+- Blockers: None.
+- Next: Push the branch and use release CI to publish `0.2.48`.
+
 ### 2026-05-07 04:00 PDT — pi-runtime-refresh
 
 - Objective: Run another broad Feynman health sweep and take useful dependency/runtime fixes without bloating the wrapper.
