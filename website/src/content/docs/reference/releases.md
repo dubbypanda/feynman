@@ -16,7 +16,8 @@ This page summarizes what changed in recent Feynman releases. GitHub releases us
 
 ### Validation
 
-- Website build and website production audit passed.
+- Website build, typecheck, lint, and production audit passed.
+- Root build, typecheck, full tests, package dry-run, native bundle build, and production audit passed after the website upgrade.
 
 ## v0.2.48 - 2026-05-07
 

@@ -22,7 +22,7 @@ Use this file to track chronology, not release notes. Keep entries short, factua
 - Verified: Root build, typecheck, full tests, package dry-run, native bundle build, website build/typecheck/lint, and production audits passed locally.
 - Failed / learned: The native bundle and website build still had stale assumptions: native validation expected `better-sqlite3`, and the Astro 6 upgrade needed the Vite override lifted to Vite 7 before static pages rendered.
 - Blockers: None.
-- Next: Push the branch and use release CI to publish `0.2.48`.
+- Next: Push `main` and use release CI to publish `0.2.49`.
 
 ### 2026-05-07 04:00 PDT — pi-runtime-refresh
 
