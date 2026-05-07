@@ -7,6 +7,26 @@ order: 4
 
 This page summarizes what changed in recent Feynman releases. GitHub releases use the same version-specific notes from the repository `RELEASES.md` file.
 
+## v0.2.48 - 2026-05-07
+
+### Fixes
+
+- Restored Node.js 24 support for the Feynman CLI and npm package.
+- Slimmed the default Pi package set to the core AI research essentials: alphaXiv access, subagents, document parsing, and web access.
+- Moved memory and session search out of the default install path so optional package failures cannot block first launch.
+- Kept session search gated to Node.js 22.x because its upstream sqlite dependency still depends on native prebuild coverage.
+- Upgraded the TypeScript toolchain to 6.0 and updated the build config for its explicit `rootDir` requirement.
+
+### Documentation
+
+- Updated package-stack, setup, install, and session-search docs to distinguish core researcher packages from optional extras.
+
+### Validation
+
+- Full local tests passed: 157/157.
+- Typecheck, root build, website build, production `npm audit --omit=dev`, and package dry-run passed.
+- Package dry-run verified the bundled runtime workspace excludes memory and session search by default.
+
 ## v0.2.47 - 2026-05-07
 
 ### Documentation

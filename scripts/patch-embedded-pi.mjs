@@ -109,13 +109,13 @@ const workspaceDir = resolve(appRoot, ".feynman", "npm");
 const workspacePackageJsonPath = resolve(workspaceDir, "package.json");
 const workspaceManifestPath = resolve(workspaceDir, ".runtime-manifest.json");
 const workspaceArchivePath = resolve(appRoot, ".feynman", "runtime-workspace.tgz");
+const workspaceNpmConfigPath = resolve(workspaceDir, ".npmrc");
 const workspaceSetupLockDir = resolve(appRoot, ".feynman", ".workspace-setup.lock");
 const globalNodeModulesRoot = resolve(feynmanNpmPrefix, "lib", "node_modules");
 const PRUNE_VERSION = 6;
 const WORKSPACE_SETUP_LOCK_STALE_MS = 300000;
 const NATIVE_PACKAGE_SPECS = new Set([
 	"@kaiserlich-dev/pi-session-search",
-	"@samfp/pi-memory",
 ]);
 const FILTERED_INSTALL_OUTPUT_PATTERNS = [
 	/npm warn deprecated node-domexception@1\.0\.0/i,
@@ -131,7 +131,7 @@ function arraysMatch(left, right) {
 
 function supportsNativePackageSources(version = process.versions.node) {
 	const [major = "0"] = version.replace(/^v/, "").split(".");
-	return (Number.parseInt(major, 10) || 0) <= 24;
+	return (Number.parseInt(major, 10) || 0) <= 22;
 }
 
 function createInstallCommand(packageManager, packageSpecs) {
@@ -192,6 +192,8 @@ function installWorkspacePackages(packageSpecs) {
 		env: {
 			...process.env,
 			PATH: getPathWithCurrentNode(process.env.PATH),
+			npm_config_userconfig: workspaceNpmConfigPath,
+			NPM_CONFIG_USERCONFIG: workspaceNpmConfigPath,
 		},
 	});
 

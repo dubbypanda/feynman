@@ -1,6 +1,6 @@
 export const MIN_NODE_VERSION = "20.19.0";
-export const MAX_NODE_MAJOR = 22;
-export const PREFERRED_NODE_MAJOR = 22;
+export const MAX_NODE_MAJOR = 24;
+export const PREFERRED_NODE_MAJOR = 24;
 
 type ParsedNodeVersion = {
 	major: number;
@@ -35,7 +35,7 @@ export function getUnsupportedNodeVersionLines(version = process.versions.node):
 	return [
 		`feynman supports ${rangeText} (detected ${version}).`,
 		parsed.major > MAX_NODE_MAJOR
-			? "This newer Node release is not supported yet because native Pi packages may fail to build."
+			? "This newer Node release is not supported yet."
 			: isWindows
 				? "Install a supported Node.js release from https://nodejs.org, or use the standalone installer:"
 				: `Switch to a supported Node release with \`nvm install ${PREFERRED_NODE_MAJOR} && nvm use ${PREFERRED_NODE_MAJOR}\`, or use the standalone installer:`,

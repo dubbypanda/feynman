@@ -6,7 +6,7 @@ import { spawnSync } from "node:child_process";
 const appRoot = resolve(import.meta.dirname, "..");
 const packageJson = JSON.parse(readFileSync(resolve(appRoot, "package.json"), "utf8"));
 const packageLockPath = resolve(appRoot, "package-lock.json");
-const minBundledNodeVersion = packageJson.engines?.node?.replace(/^>=/, "").trim() || process.version.slice(1);
+const minBundledNodeVersion = packageJson.engines?.node?.match(/>=\s*([0-9]+\.[0-9]+\.[0-9]+)/)?.[1] || process.version.slice(1);
 
 function parseSemver(version) {
 	const [major = "0", minor = "0", patch = "0"] = version.split(".");
@@ -316,6 +316,12 @@ function validateBundle(bundleRoot, target) {
 		target.launcher === "windows"
 			? resolve(bundleRoot, "node", "node.exe")
 			: resolve(bundleRoot, "node", "bin", "node");
+
+	const betterSqlitePackageJson = resolve(bundleRoot, "app", ".feynman", "npm", "node_modules", "better-sqlite3", "package.json");
+	if (!existsSync(betterSqlitePackageJson)) {
+		logStep("skipping better-sqlite3 validation; sqlite-backed packages are not bundled for this Node runtime");
+		return;
+	}
 
 	run(nodeExecutable, ["-e", "require('./app/.feynman/npm/node_modules/better-sqlite3'); console.log('better-sqlite3 ok')"], {
 		cwd: bundleRoot,

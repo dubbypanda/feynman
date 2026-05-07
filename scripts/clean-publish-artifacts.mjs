@@ -2,7 +2,7 @@ import { rmSync } from "node:fs";
 import { resolve } from "node:path";
 
 const appRoot = resolve(import.meta.dirname, "..");
-const releaseDir = resolve(appRoot, "dist", "release");
+const distDir = resolve(appRoot, "dist");
 
-rmSync(releaseDir, { recursive: true, force: true });
-console.log("[feynman] removed dist/release before npm pack/publish");
+rmSync(distDir, { recursive: true, force: true });
+console.log("[feynman] removed dist before npm pack/publish");

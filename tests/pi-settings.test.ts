@@ -106,17 +106,31 @@ test("normalizeFeynmanSettings prunes the removed telemetry default package", ()
 });
 
 test("optional package presets map friendly aliases", () => {
-	assert.deepEqual(getOptionalPackagePresetSources("memory"), undefined);
+	assert.deepEqual(getOptionalPackagePresetSources("memory"), ["npm:@samfp/pi-memory"]);
+	assert.deepEqual(getOptionalPackagePresetSources("session-search", "darwin", "22.12.0"), ["npm:@kaiserlich-dev/pi-session-search"]);
+	assert.deepEqual(getOptionalPackagePresetSources("session-search", "darwin", "24.8.0"), undefined);
 	assert.deepEqual(getOptionalPackagePresetSources("ui", "darwin"), ["npm:pi-generative-ui"]);
 	assert.deepEqual(getOptionalPackagePresetSources("generative-ui", "linux"), undefined);
-	assert.deepEqual(getOptionalPackagePresetSources("all-extras", "darwin"), ["npm:pi-generative-ui"]);
-	assert.deepEqual(getOptionalPackagePresetSources("all-extras", "linux"), undefined);
+	assert.deepEqual(getOptionalPackagePresetSources("all-extras", "darwin", "22.12.0"), [
+		"npm:@samfp/pi-memory",
+		"npm:@kaiserlich-dev/pi-session-search",
+		"npm:pi-generative-ui",
+	]);
+	assert.deepEqual(getOptionalPackagePresetSources("all-extras", "darwin", "24.8.0"), [
+		"npm:@samfp/pi-memory",
+		"npm:pi-generative-ui",
+	]);
+	assert.deepEqual(getOptionalPackagePresetSources("all-extras", "linux", "22.12.0"), [
+		"npm:@samfp/pi-memory",
+		"npm:@kaiserlich-dev/pi-session-search",
+	]);
 	assert.deepEqual(getOptionalPackagePresetSources("search"), undefined);
 	assert.equal(normalizeOptionalPackagePresetName("ui"), "generative-ui");
 	assert.equal(isOptionalPackagePresetSupported("generative-ui", "darwin"), true);
 	assert.equal(isOptionalPackagePresetSupported("generative-ui", "linux"), false);
-	assert.deepEqual(listOptionalPackagePresets("linux"), []);
-	assert.deepEqual(listOptionalPackagePresetInstallTargets("linux"), []);
+	assert.equal(isOptionalPackagePresetSupported("session-search", "darwin", "24.8.0"), false);
+	assert.deepEqual(listOptionalPackagePresets("linux", "24.8.0").map((preset) => preset.name), ["memory"]);
+	assert.deepEqual(listOptionalPackagePresetInstallTargets("linux", "24.8.0"), ["memory", "all-extras"]);
 	assert.equal(shouldPruneLegacyDefaultPackages(["npm:custom"]), false);
 });
 
@@ -125,7 +139,7 @@ test("package update sources map core and optional aliases", () => {
 	assert.deepEqual(resolvePackageUpdateSources("pi-memory"), ["npm:@samfp/pi-memory"]);
 	assert.deepEqual(resolvePackageUpdateSources("session-search"), ["npm:@kaiserlich-dev/pi-session-search"]);
 	assert.deepEqual(resolvePackageUpdateSources("generative-ui", "darwin"), ["npm:pi-generative-ui"]);
-	assert.deepEqual(resolvePackageUpdateSources("all-extras", "darwin"), ["npm:pi-generative-ui"]);
+	assert.deepEqual(resolvePackageUpdateSources("all-extras", "darwin"), getOptionalPackagePresetSources("all-extras", "darwin"));
 	assert.deepEqual(resolvePackageUpdateSources("npm:@samfp/pi-memory"), ["npm:@samfp/pi-memory"]);
 	assert.deepEqual(resolvePackageUpdateSources("custom-package"), ["custom-package"]);
 });
@@ -136,7 +150,7 @@ test("supportsNativePackageSources disables sqlite-backed packages on Node 23+",
 	assert.equal(supportsNativePackageSources("24.8.0"), false);
 });
 
-test("normalizeFeynmanSettings prunes native core packages on unsupported Node majors", () => {
+test("normalizeFeynmanSettings prunes legacy package defaults to the lean research core", () => {
 	const root = mkdtempSync(join(tmpdir(), "feynman-settings-"));
 	const settingsPath = join(root, "settings.json");
 	const bundledSettingsPath = join(root, "bundled-settings.json");
@@ -146,7 +160,19 @@ test("normalizeFeynmanSettings prunes native core packages on unsupported Node m
 		settingsPath,
 		JSON.stringify(
 			{
-				packages: [...CORE_PACKAGE_SOURCES],
+				packages: [
+					...CORE_PACKAGE_SOURCES,
+					"npm:pi-btw",
+					"npm:pi-markdown-preview",
+					"npm:@walterra/pi-charts",
+					"npm:pi-mermaid",
+					"npm:@aliou/pi-processes",
+					"npm:pi-zotero",
+					"npm:@kaiserlich-dev/pi-session-search",
+					"npm:pi-schedule-prompt",
+					"npm:@samfp/pi-memory",
+					"npm:@tmustier/pi-ralph-wiggum",
+				],
 			},
 			null,
 			2,
@@ -165,7 +191,9 @@ test("normalizeFeynmanSettings prunes native core packages on unsupported Node m
 	}
 
 	const settings = JSON.parse(readFileSync(settingsPath, "utf8")) as { packages?: string[] };
+	assert.deepEqual(settings.packages, [...CORE_PACKAGE_SOURCES]);
 	for (const source of NATIVE_PACKAGE_SOURCES) {
-		assert.equal(settings.packages?.includes(source), false);
+		assert.equal((settings.packages as string[] | undefined)?.includes(source), false);
 	}
+	assert.equal((settings.packages as string[] | undefined)?.includes("npm:@samfp/pi-memory"), false);
 });

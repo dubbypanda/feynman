@@ -19,18 +19,8 @@ These are installed by default with every Feynman installation. They provide the
 | --- | --- |
 | `@companion-ai/alpha-hub` | Direct alphaXiv tools for paper and author workflows |
 | `pi-subagents` | Parallel agent spawning for literature gathering and task decomposition. Powers the multi-agent workflows |
-| `pi-btw` | Fast side-thread `/btw` conversations without interrupting the main research run |
 | `pi-docparser` | Parse PDFs, Office documents, spreadsheets, and images for content extraction |
 | `pi-web-access` | Web browsing, GitHub access, PDF fetching, and media retrieval |
-| `pi-markdown-preview` | Render Markdown and LaTeX-heavy research documents as polished HTML/PDF |
-| `@walterra/pi-charts` | Generate charts and quantitative visualizations from data |
-| `pi-mermaid` | Render Mermaid diagrams in the terminal UI |
-| `@aliou/pi-processes` | Manage long-running experiments, background tasks, and log tailing |
-| `pi-zotero` | Integration with Zotero for citation library management |
-| `@kaiserlich-dev/pi-session-search` | Indexed session recall with summarize and resume UI. Powers session lookup |
-| `pi-schedule-prompt` | Schedule recurring and deferred research jobs. Powers the `/watch` workflow |
-| `@samfp/pi-memory` | Pi-managed preference and correction memory across sessions |
-| `@tmustier/pi-ralph-wiggum` | Long-running agent loops for iterative development. Powers `/autoresearch` |
 
 These packages are updated together when you run `feynman update`. You do not need to install them individually.
 
@@ -48,6 +38,8 @@ Install on demand with `feynman packages install <preset>`. These extend Feynman
 
 | Package | Preset | Purpose |
 | --- | --- | --- |
+| `@samfp/pi-memory` | `memory` | Pi-managed preference and correction memory across sessions |
+| `@kaiserlich-dev/pi-session-search` | `session-search` | Indexed session recall with summarize and resume UI. Available through Node.js 22.x while its sqlite dependency is native-bound |
 | `pi-generative-ui` | `generative-ui` | Interactive HTML-style widgets for rich output on macOS. The upstream package currently declares macOS-only support |
 
 ## Installing and managing packages

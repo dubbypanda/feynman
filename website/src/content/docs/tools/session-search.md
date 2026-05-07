@@ -15,6 +15,8 @@ Session search is an optional package. Install it with:
 feynman packages install session-search
 ```
 
+It is available through Node.js 22.x while the upstream sqlite dependency remains native-bound. On newer Node majors, Feynman skips it instead of making first launch depend on a local C++ build toolchain.
+
 Once installed, the `/search` slash command and automatic session recall become available in all future sessions.
 
 ## Usage

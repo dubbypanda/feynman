@@ -48,7 +48,7 @@ AlphaXiv authentication enables Feynman to search and retrieve papers, access di
 | `feynman packages install <preset>` | Install an optional package preset |
 | `feynman update [package]` | Update installed packages, or a specific package by name |
 
-Use `feynman packages list` to see which optional packages are available on your platform and which are already installed. Core packages already include memory and session search. The `all-extras` preset installs every optional package available on the current platform.
+Use `feynman packages list` to see which optional packages are available on your platform and which are already installed. The default install keeps only the research essentials in core. The `all-extras` preset installs every optional package available on the current platform and Node runtime.
 
 ## Utility commands
 

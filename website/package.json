@@ -4,7 +4,7 @@
   "version": "0.0.1",
   "private": true,
   "engines": {
-    "node": ">=20.19.0"
+    "node": ">=20.19.0 <25"
   },
   "scripts": {
     "dev": "astro dev",
@@ -22,7 +22,7 @@
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19.2.3",
     "@vercel/analytics": "^2.0.1",
-    "astro": "^5.18.1",
+    "astro": "^6.3.1",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "lucide-react": "^1.6.0",
@@ -37,8 +37,11 @@
   "overrides": {
     "@modelcontextprotocol/sdk": {
       "@hono/node-server": "1.19.14",
-      "hono": "4.12.14"
+      "hono": "4.12.18"
     },
+    "express-rate-limit": "8.5.1",
+    "ip-address": "10.2.0",
+    "postcss": "8.5.14",
     "router": {
       "path-to-regexp": "8.4.2"
     },

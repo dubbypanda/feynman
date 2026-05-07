@@ -202,7 +202,7 @@ async function handleUpdateCommand(workingDir: string, feynmanAgentDir: string, 
 		const updated = results.flatMap((result) => result.updated);
 		const skipped = results.flatMap((result) => result.skipped);
 
-		if (updated.length === 0) {
+		if (updated.length === 0 && skipped.length === 0) {
 			console.log("All packages up to date.");
 			return;
 		}
@@ -212,6 +212,9 @@ async function handleUpdateCommand(workingDir: string, feynmanAgentDir: string, 
 		}
 		for (const skippedSource of skipped) {
 			console.log(`Skipped ${skippedSource} on Node ${process.versions.node} (native packages are only supported through Node ${MAX_NATIVE_PACKAGE_NODE_MAJOR}.x).`);
+		}
+		if (updated.length === 0) {
+			return;
 		}
 		console.log("All packages up to date.");
 	} catch (error) {
@@ -253,7 +256,6 @@ async function handlePackagesCommand(subcommand: string | undefined, args: strin
 		const optionalPresets = listOptionalPackagePresets();
 		if (optionalPresets.length === 0) {
 			printInfo(`No optional package presets are available on ${process.platform}.`);
-			printInfo("Core packages already include memory and session search.");
 			return;
 		}
 		for (const preset of optionalPresets) {
@@ -272,7 +274,7 @@ async function handlePackagesCommand(subcommand: string | undefined, args: strin
 	if (!target) {
 		const installTargets = listOptionalPackagePresetInstallTargets();
 		if (installTargets.length === 0) {
-			throw new Error(`No optional package presets are available on ${process.platform}. Core packages already include memory and session search.`);
+			throw new Error(`No optional package presets are available on ${process.platform}.`);
 		}
 		throw new Error(`Usage: feynman packages install <${installTargets.join("|")}>`);
 	}
@@ -282,18 +284,16 @@ async function handlePackagesCommand(subcommand: string | undefined, args: strin
 		const normalizedPreset = normalizeOptionalPackagePresetName(target);
 		if (normalizedPreset === "all-extras") {
 			console.log(`No optional package presets are available on ${process.platform}.`);
-			console.log("Core packages already include memory and session search.");
 			return;
 		}
 		if (normalizedPreset && !isOptionalPackagePresetSupported(normalizedPreset)) {
-			console.log(`${normalizedPreset} is not available on ${process.platform}.`);
+			console.log(`${normalizedPreset} is not available on this runtime.`);
 			if (normalizedPreset === "generative-ui") {
 				console.log("The upstream pi-generative-ui package currently supports macOS only.");
 			}
-			return;
-		}
-		if (target === "memory" || target === "session-search") {
-			console.log(`${target} is installed by default as a core package.`);
+			if (normalizedPreset === "session-search") {
+				console.log(`Its sqlite-backed dependency is only supported through Node ${MAX_NATIVE_PACKAGE_NODE_MAJOR}.x.`);
+			}
 			return;
 		}
 		throw new Error(`Unknown package preset: ${target}`);

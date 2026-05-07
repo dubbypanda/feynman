@@ -24,7 +24,7 @@ If you need to change how bundled subagents behave, edit `.feynman/agents/*.md`.
 ## Before You Open a PR
 
 1. Start from the latest `main`.
-2. Use Node.js `22.x` for local development. The supported runtime range is Node.js `20.19.0` through `24.x`; `.nvmrc` pins the preferred local version while `package.json`, `website/package.json`, and the runtime version guard define the broader supported range.
+2. Use Node.js `24.x` for local development. The supported runtime range is Node.js `20.19.0` through `24.x`; `.nvmrc` pins the preferred local version while `package.json`, `website/package.json`, and the runtime version guard define the broader supported range. The optional session-search package remains limited to Node.js `22.x` because its sqlite dependency does not reliably install on newer Node majors.
 3. Install dependencies from the repo root:
 
 ```bash

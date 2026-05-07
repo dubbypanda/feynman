@@ -22,7 +22,7 @@ jobs:
       - uses: actions/checkout@v6
       - uses: actions/setup-node@v6
         with:
-          node-version: 22
+          node-version: 24
           registry-url: "https://registry.npmjs.org"
       - id: version
         shell: bash
@@ -58,7 +58,7 @@ jobs:
       - uses: actions/checkout@v6
       - uses: actions/setup-node@v6
         with:
-          node-version: 22
+          node-version: 24
           registry-url: "https://registry.npmjs.org"
       - run: npm ci
       - run: npm test
@@ -77,7 +77,7 @@ jobs:
       - uses: actions/checkout@v6
       - uses: actions/setup-node@v6
         with:
-          node-version: 22
+          node-version: 24
       - run: npm ci
       - run: npx npm@latest publish --access public
 
@@ -103,7 +103,7 @@ jobs:
       - uses: actions/checkout@v6
       - uses: actions/setup-node@v6
         with:
-          node-version: 22
+          node-version: 24
       - run: npm ci --ignore-scripts
       - run: npm run build
       - run: npm run build:native-bundle

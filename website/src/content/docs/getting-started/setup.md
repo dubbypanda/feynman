@@ -113,8 +113,10 @@ to confirm the local model is available and make it the default.
 
 ## Stage 3: Optional packages
 
-Feynman's core ships with the essentials, including web access, subagents, memory, and session search. On platforms with supported optional presets, the wizard can offer extras:
+Feynman's core ships with the research essentials: alphaXiv access, web access, document parsing, and subagents. On platforms with supported optional presets, the wizard can offer extras:
 
+- **memory** -- Preference and correction memory across sessions
+- **session-search** -- Indexed recall for prior session transcripts. Available through Node.js 22.x while its sqlite dependency is native-bound
 - **generative-ui** -- Interactive HTML-style widgets for rich output on macOS
 
 You can skip this step and install packages later with `feynman packages install <preset>`.

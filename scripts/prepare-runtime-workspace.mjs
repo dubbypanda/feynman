@@ -17,6 +17,7 @@ const workspaceDir = resolve(appRoot, ".feynman", "npm");
 const workspaceNodeModulesDir = resolve(workspaceDir, "node_modules");
 const manifestPath = resolve(workspaceDir, ".runtime-manifest.json");
 const workspacePackageJsonPath = resolve(workspaceDir, "package.json");
+const workspaceNpmConfigPath = resolve(workspaceDir, ".npmrc");
 const workspaceArchivePath = resolve(feynmanDir, "runtime-workspace.tgz");
 const PRUNE_VERSION = 6;
 const PINNED_RUNTIME_PACKAGES = [
@@ -25,6 +26,24 @@ const PINNED_RUNTIME_PACKAGES = [
 	"@mariozechner/pi-coding-agent",
 	"@mariozechner/pi-tui",
 ];
+const NATIVE_PACKAGE_SPECS = new Set([
+	"@kaiserlich-dev/pi-session-search",
+]);
+
+function supportsNativePackageSources(version = process.versions.node) {
+	const [major = "0"] = version.replace(/^v/, "").split(".");
+	return (Number.parseInt(major, 10) || 0) <= 22;
+}
+
+function parsePackageName(spec) {
+	const match = spec.match(/^(@?[^@]+(?:\/[^@]+)?)(?:@.+)?$/);
+	return match?.[1] ?? spec;
+}
+
+function filterUnsupportedPackageSpecs(packageSpecs) {
+	if (supportsNativePackageSources()) return packageSpecs;
+	return packageSpecs.filter((spec) => !NATIVE_PACKAGE_SPECS.has(parsePackageName(spec)));
+}
 
 function readPackageSpecs() {
 	const settings = JSON.parse(readFileSync(settingsPath, "utf8"));
@@ -41,12 +60,7 @@ function readPackageSpecs() {
 		}
 	}
 
-	return Array.from(new Set(packageSpecs));
-}
-
-function parsePackageName(spec) {
-	const match = spec.match(/^(@?[^@]+(?:\/[^@]+)?)(?:@.+)?$/);
-	return match?.[1] ?? spec;
+	return filterUnsupportedPackageSpecs(Array.from(new Set(packageSpecs)));
 }
 
 function readLockedPackageVersion(packageName) {
@@ -134,6 +148,7 @@ function writeWorkspacePackageJson() {
 		) + "\n",
 		"utf8",
 	);
+	writeFileSync(workspaceNpmConfigPath, "", "utf8");
 }
 
 function childNpmInstallEnv() {
@@ -144,6 +159,8 @@ function childNpmInstallEnv() {
 		// publish artifact can be validated without poisoning the archive.
 		npm_config_dry_run: "false",
 		NPM_CONFIG_DRY_RUN: "false",
+		npm_config_userconfig: workspaceNpmConfigPath,
+		NPM_CONFIG_USERCONFIG: workspaceNpmConfigPath,
 	};
 }
 
