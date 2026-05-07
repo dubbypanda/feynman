@@ -7,6 +7,8 @@ order: 3
 
 Feynman includes read-only Hugging Face Hub tools for grounding ML recipes and replication plans. They help the researcher verify whether a dataset or repo actually exposes the files, splits, schema, and card metadata needed for implementation.
 
+These tools are grounded in Hugging Face's public [Hub API endpoint docs](https://huggingface.co/docs/hub/api). Authentication follows the `HF_TOKEN` environment variable documented by [`huggingface_hub`](https://huggingface.co/docs/huggingface_hub/main/en/package_reference/environment_variables); Feynman also accepts `HUGGINGFACE_HUB_TOKEN` for compatibility with existing shells.
+
 ## Authentication
 
 Public Hub resources work without configuration. For private or gated resources, set an access token in your shell before launching Feynman:
@@ -27,7 +29,7 @@ The researcher agent can use these tools automatically:
 | `hf_repo_files` | List files in a model, dataset, or Space repository before reading anything large |
 | `hf_repo_read_file` | Read small text files from Hub repos, such as `README.md`, configs, examples, and scripts |
 
-The file reader truncates output by default and is intended for text files only. It is not a weight downloader or dataset bulk reader.
+The file reader truncates output by default and is intended for text files only. It is not a weight downloader or dataset bulk reader. It refuses obvious model weight files, archives, and dataset shards such as `.safetensors`, `.bin`, `.gguf`, `.parquet`, `.zip`, and `.tar` before download.
 
 ## Where it is used
 

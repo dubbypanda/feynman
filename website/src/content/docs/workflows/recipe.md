@@ -7,6 +7,8 @@ order: 6
 
 The recipe workflow turns a training or fine-tuning goal into a ranked set of implementable recipes. It is designed for ML engineering questions where the useful answer is not just "what papers exist?" but "which dataset, method, hyperparameters, code path, and checks should I try first?"
 
+The workflow borrows the useful idea from Hugging Face's open-source [`ml-intern`](https://github.com/huggingface/ml-intern) repo: make ML research outputs recipe-shaped and implementation-ready. Feynman keeps the implementation native to Pi prompts, bundled skills, and read-only Hub inspection tools rather than copying `ml-intern`'s runtime loop or frontend.
+
 ## Usage
 
 From the REPL:

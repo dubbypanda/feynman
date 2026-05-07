@@ -119,7 +119,7 @@ test("Hugging Face file reader refuses likely large or binary files before downl
 
 	const tools = registerTools();
 	await assert.rejects(
-		tools.get("hf_repo_read_file")?.execute("call-4", {
+		async () => tools.get("hf_repo_read_file")!.execute("call-4", {
 			repo: "openai-community/gpt2",
 			repoType: "model",
 			path: "model.safetensors",

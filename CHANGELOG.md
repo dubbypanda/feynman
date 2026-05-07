@@ -33,6 +33,15 @@ Use this file to track chronology, not release notes. Keep entries short, factua
 - Blockers: Need post-bump pack/audit validation, commit, push, release workflow confirmation, and global install update to `0.2.46`.
 - Next: Run final validation, push `main`, watch release CI, then install `@companion-ai/feynman@0.2.46` globally.
 
+### 2026-05-07 05:35 PDT — docs-test-cleanup
+
+- Objective: Clear the remaining local doc/test corrections without pushing a duplicate package version.
+- Changed: Linked upstream Pi and Hugging Face docs from README and website docs; clarified Hugging Face binary-file refusal behavior; tightened the binary-refusal test assertion; bumped the package to `0.2.47`.
+- Verified: Pending final validation before push.
+- Failed / learned: `0.2.46` released successfully, so any further pushed changes need a new package version to keep the release workflow green.
+- Blockers: Need validation, push, release workflow confirmation, and global install update to `0.2.47`.
+- Next: Run tests/build/audit/pack, push `main`, watch release CI, then install latest globally.
+
 ### 2026-05-06 19:04 PDT — audit-cleanup
 
 - Objective: Run a broad maintenance pass after tracker cleanup and fix anything that materially helps Feynman.

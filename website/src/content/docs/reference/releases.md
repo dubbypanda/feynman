@@ -7,12 +7,26 @@ order: 4
 
 This page summarizes what changed in recent Feynman releases. GitHub releases use the same version-specific notes from the repository `RELEASES.md` file.
 
+## v0.2.47 - 2026-05-07
+
+### Documentation
+
+- Clarified that Feynman's package, extension, and skill wiring follows Pi's upstream package model.
+- Linked the Hugging Face Hub API and environment-variable docs from the README and website docs.
+- Clarified that Hugging Face file reads refuse obvious model weights, archives, and dataset shards before download.
+
+### Validation
+
+- Tightened the Hugging Face binary-file refusal regression test.
+- Full local tests passed: 157/157.
+- Typecheck, root build, website build, and production `npm audit --omit=dev` passed.
+
 ## v0.2.46 - 2026-05-07
 
 ### Updates
 
 - Added the `/recipe` workflow for ranked ML training recipes backed by papers, datasets, docs, implementation paths, and verification status.
-- Added read-only Hugging Face Hub inspection tools for dataset metadata, repo file listing, and small text file reads. These support recipe and replication grounding without requiring Hub write access.
+- Added read-only Hugging Face Hub inspection tools for dataset metadata, repo file listing, and small text file reads. These support recipe and replication grounding without requiring Hub write access, and refuse obvious weight/archive/shard reads before download.
 - Updated `/replicate` so ML-heavy targets perform a recipe extraction pass before execution planning.
 
 ### Documentation
@@ -22,8 +36,8 @@ This page summarizes what changed in recent Feynman releases. GitHub releases us
 
 ### Validation
 
-- Added unit coverage for Hugging Face tool registration, endpoint formatting, auth headers, file listing limits, and truncation.
-- Full local tests passed: 156/156.
+- Added unit coverage for Hugging Face tool registration, endpoint formatting, auth headers, file listing limits, truncation, and binary-file refusal.
+- Full local tests passed: 157/157.
 - Typecheck, root build, website build, CLI help, and live Hugging Face endpoint smoke checks passed.
 
 ## v0.2.45 - 2026-05-07
