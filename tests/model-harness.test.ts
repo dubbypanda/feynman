@@ -225,6 +225,7 @@ test("resolveInitialPrompt maps top-level research commands to Pi slash workflow
 		"review",
 		"audit",
 		"replicate",
+		"recipe",
 		"compare",
 		"draft",
 		"autoresearch",
@@ -238,6 +239,7 @@ test("resolveInitialPrompt maps top-level research commands to Pi slash workflow
 	assert.equal(resolveInitialPrompt("review", ["paper.md"], undefined, workflows), "/review paper.md");
 	assert.equal(resolveInitialPrompt("audit", ["2401.12345"], undefined, workflows), "/audit 2401.12345");
 	assert.equal(resolveInitialPrompt("replicate", ["chain-of-thought"], undefined, workflows), "/replicate chain-of-thought");
+	assert.equal(resolveInitialPrompt("recipe", ["math", "reasoning"], undefined, workflows), "/recipe math reasoning");
 	assert.equal(resolveInitialPrompt("compare", ["tool", "use"], undefined, workflows), "/compare tool use");
 	assert.equal(resolveInitialPrompt("draft", ["mechanistic", "interp"], undefined, workflows), "/draft mechanistic interp");
 	assert.equal(resolveInitialPrompt("autoresearch", ["gsm8k"], undefined, workflows), "/autoresearch gsm8k");

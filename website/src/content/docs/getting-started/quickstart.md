@@ -38,6 +38,16 @@ feynman
 
 The agents collaborate to produce a structured research report with citations, key findings, and open questions. The full report is saved to your session directory for later reference.
 
+## Find an ML training recipe
+
+For applied ML work, use `/recipe` when you need a practical starting point rather than a broad literature survey:
+
+```bash
+feynman recipe "fine-tune a small model for math reasoning"
+```
+
+Feynman ranks candidate recipes by result quality and feasibility, checks datasets and implementation paths when possible, and writes the final brief to `outputs/<slug>-recipe.md`.
+
 ## Work with files
 
 Feynman can read and write files in your working directory. Point it at a paper or codebase for targeted analysis:
@@ -51,7 +61,7 @@ You can also ask Feynman to draft documents, audit code, or compare multiple sou
 
 ## Explore slash commands
 
-Type `/help` inside the REPL to see all available slash commands. Each command maps to a workflow or utility, such as `/deepresearch`, `/review`, `/draft`, `/watch`, and more. You can also run any workflow directly from the CLI:
+Type `/help` inside the REPL to see all available slash commands. Each command maps to a workflow or utility, such as `/deepresearch`, `/recipe`, `/review`, `/draft`, `/watch`, and more. You can also run any workflow directly from the CLI:
 
 ```bash
 feynman deepresearch "transformer architectures for protein folding"

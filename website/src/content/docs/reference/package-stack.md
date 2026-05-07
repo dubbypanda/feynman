@@ -7,6 +7,8 @@ order: 3
 
 Feynman is built on the Pi runtime and uses curated Pi packages for its capabilities. Packages are managed through `feynman packages` commands and configured in `~/.feynman/settings.json`.
 
+Feynman also ships a local research extension that registers project-specific tools such as AlphaXiv wrappers, Feynman commands, and read-only Hugging Face Hub inspection. Those extension tools are bundled with Feynman itself rather than installed as separate Pi packages.
+
 ## Core packages
 
 These are installed by default with every Feynman installation. They provide the foundation for research workflows while still letting Pi own the underlying runtime, RPC transport, provider model, and package loader.
@@ -29,6 +31,14 @@ These are installed by default with every Feynman installation. They provide the
 | `@tmustier/pi-ralph-wiggum` | Long-running agent loops for iterative development. Powers `/autoresearch` |
 
 These packages are updated together when you run `feynman update`. You do not need to install them individually.
+
+## Bundled research extension
+
+| Tool group | Purpose |
+| --- | --- |
+| AlphaXiv tools | Search papers, fetch paper reports, ask paper questions, read linked code, and manage annotations |
+| Hugging Face Hub tools | Inspect dataset metadata, features, splits, access status, and small files from model, dataset, and Space repos |
+| Feynman commands | `/help`, `/outputs`, `/init`, `/feynman-model`, `/service-tier`, and discovery helpers |
 
 ## Optional packages
 

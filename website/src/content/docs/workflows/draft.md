@@ -2,7 +2,7 @@
 title: Draft Writing
 description: Generate a paper-style draft from research findings and session context.
 section: Workflows
-order: 7
+order: 8
 ---
 
 The draft writing workflow generates structured academic-style documents from your research findings. It uses the writer agent to produce well-organized prose with proper citations, sections, and formatting suitable for papers, reports, or blog posts.

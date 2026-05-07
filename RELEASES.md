@@ -4,6 +4,25 @@ This file is the public release history for Feynman. Keep entries user-facing: w
 
 GitHub release notes are generated from the matching `## vX.Y.Z` section in this file.
 
+## v0.2.46 - 2026-05-07
+
+### Updates
+
+- Added the `/recipe` workflow for ranked ML training recipes backed by papers, datasets, docs, implementation paths, and verification status.
+- Added read-only Hugging Face Hub inspection tools for dataset metadata, repo file listing, and small text file reads. These support recipe and replication grounding without requiring Hub write access.
+- Updated `/replicate` so ML-heavy targets perform a recipe extraction pass before execution planning.
+
+### Documentation
+
+- Added website docs for the `/recipe` workflow and Hugging Face Hub tools.
+- Updated README, quickstart, command references, agent docs, replication docs, and package-stack docs for the new workflow and tools.
+
+### Validation
+
+- Added unit coverage for Hugging Face tool registration, endpoint formatting, auth headers, file listing limits, and truncation.
+- Full local tests passed: 156/156.
+- Typecheck, root build, website build, CLI help, and live Hugging Face endpoint smoke checks passed.
+
 ## v0.2.45 - 2026-05-07
 
 ### Updates
@@ -16,6 +35,7 @@ GitHub release notes are generated from the matching `## vX.Y.Z` section in this
 - Full local tests passed: 154/154.
 - Typecheck, root build, website build, `feynman doctor`, and production `npm audit --omit=dev` passed.
 - JSONL RPC smoke passed with `get_state` and a `bash` command returning `FEYNMAN_RPC_OK`.
+- Release CI published npm `0.2.45`, built all native bundles, and created the GitHub release.
 
 ## v0.2.44 - 2026-05-06
 

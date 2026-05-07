@@ -2,7 +2,7 @@
 title: Watch
 description: Set up recurring research monitoring on a topic.
 section: Workflows
-order: 9
+order: 10
 ---
 
 The watch workflow sets up recurring research monitoring that periodically checks for new papers, articles, and developments on a topic you care about. It notifies you when something relevant appears and can automatically summarize new findings.

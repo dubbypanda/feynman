@@ -2,7 +2,7 @@
 title: Source Comparison
 description: Compare multiple sources and produce an agreement/disagreement matrix.
 section: Workflows
-order: 6
+order: 7
 ---
 
 The source comparison workflow analyzes multiple papers, articles, or documents side by side and produces a structured matrix showing where they agree, disagree, and differ in methodology. It is useful for understanding conflicting results, evaluating competing approaches, and identifying which claims have broad support versus limited evidence.

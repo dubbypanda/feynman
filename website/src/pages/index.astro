@@ -9,6 +9,7 @@ const workflows = [
   { command: "/review", description: "Simulated peer review with severity scores and a revision plan" },
   { command: "/audit", description: "Paper-to-code mismatch audit for reproducibility claims" },
   { command: "/replicate", description: "Replication plan and execution in a sandboxed Docker container" },
+  { command: "/recipe", description: "Ranked ML training recipes grounded in papers, datasets, docs, and code" },
   { command: "/compare", description: "Side-by-side source comparison with agreement and conflict matrix" },
   { command: "/draft", description: "Polished paper-style draft with inline citations from findings" },
   { command: "/autoresearch", description: "Autonomous loop: hypothesize, experiment, measure, repeat" },
@@ -24,6 +25,7 @@ const agents = [
 
 const sources = [
   { name: "AlphaXiv", description: "Paper search, Q&A, code reading, and annotations via the alpha CLI", href: "https://alphaxiv.org" },
+  { name: "Hugging Face Hub", description: "Dataset schema, repo file, and small text-file inspection" },
   { name: "Web search", description: "Searches via Exa, Perplexity, or Gemini API" },
   { name: "Session search", description: "Indexed recall across prior research sessions" },
   { name: "Preview", description: "Browser and PDF export of generated artifacts" },
@@ -41,6 +43,7 @@ const terminalCommands = [
   { command: 'feynman lit "RLHF alternatives"', description: "Literature review with consensus and open questions" },
   { command: "feynman audit 2401.12345", description: "Paper claims vs. what the code actually does" },
   { command: 'feynman replicate "chain-of-thought improves math"', description: "Replication plan, compute target, experiment execution" },
+  { command: 'feynman recipe "fine-tune a small model for math reasoning"', description: "Ranked, implementable ML training recipes" },
 ]
 
 const installCommands = [

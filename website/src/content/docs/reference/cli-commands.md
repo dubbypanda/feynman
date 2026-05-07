@@ -75,6 +75,7 @@ feynman lit "topic"
 feynman review artifact.md
 feynman audit 2401.12345
 feynman replicate "claim"
+feynman recipe "fine-tune a small model for math reasoning"
 feynman compare "topic"
 feynman draft "topic"
 ```

@@ -183,6 +183,7 @@ test("workflow prompts except explicit gated workflows do not introduce implicit
 		"draft.md",
 		"lit.md",
 		"review.md",
+		"recipe.md",
 		"summarize.md",
 		"watch.md",
 	];

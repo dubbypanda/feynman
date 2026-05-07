@@ -106,6 +106,9 @@ $ feynman audit 2401.12345
 
 $ feynman replicate "chain-of-thought improves math"
 → Replicates experiments on local or cloud GPUs
+
+$ feynman recipe "fine-tune a small model for math reasoning"
+→ Finds ranked, implementable ML training recipes from papers, datasets, docs, and code
 ```
 
 ---
@@ -121,6 +124,7 @@ Ask naturally or use slash commands as shortcuts.
 | `/review <artifact>` | Simulated peer review with severity and revision plan |
 | `/audit <item>` | Paper vs. codebase mismatch audit |
 | `/replicate <paper>` | Replicate experiments on local or cloud GPUs |
+| `/recipe <task-or-paper>` | Ranked ML training recipes with dataset, method, code, and verification status |
 | `/compare <topic>` | Source comparison matrix |
 | `/draft <topic>` | Paper-style draft from research findings |
 | `/autoresearch <idea>` | Autonomous experiment loop |
@@ -143,6 +147,7 @@ Four bundled research agents, dispatched automatically.
 ### Skills & Tools
 
 - **[AlphaXiv](https://www.alphaxiv.org/)** — paper search, Q&A, code reading, annotations (via `alpha` CLI)
+- **Hugging Face Hub** — dataset metadata, split/schema inspection, and small file reads from model, dataset, and Space repos
 - **Docker** — isolated container execution for safe experiments on your machine
 - **Web search** — Exa, Perplexity, or Gemini API; no Chromium cookie access by default
 - **Session search** — indexed recall across prior research sessions

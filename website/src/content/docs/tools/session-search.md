@@ -2,7 +2,7 @@
 title: Session Search
 description: Search prior Feynman session transcripts to recall past research.
 section: Tools
-order: 3
+order: 4
 ---
 
 The session search tool recovers prior Feynman work from stored session transcripts. Every Feynman session is persisted to disk, and session search lets you find and reference past research, findings, and generated artifacts without starting over.

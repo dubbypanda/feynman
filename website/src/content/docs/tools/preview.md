@@ -2,7 +2,7 @@
 title: Preview
 description: Preview generated research artifacts as rendered HTML or PDF.
 section: Tools
-order: 4
+order: 5
 ---
 
 The preview tool renders generated artifacts as polished HTML or PDF documents and opens them in your browser or PDF viewer. This is particularly useful for research briefs, paper drafts, and any document that contains LaTeX math, tables, or complex formatting that does not render well in a terminal.

@@ -2,7 +2,7 @@
 title: Autoresearch
 description: Start an autonomous experiment loop that iteratively optimizes toward a goal.
 section: Workflows
-order: 8
+order: 9
 ---
 
 The autoresearch workflow launches an autonomous research loop that iteratively designs experiments, runs them, analyzes results, and proposes next steps. It is designed for open-ended exploration where the goal is optimization or discovery rather than a specific answer.

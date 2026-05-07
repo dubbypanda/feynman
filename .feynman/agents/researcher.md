@@ -2,7 +2,7 @@
 name: researcher
 description: Gather primary evidence across papers, web sources, repos, docs, and local artifacts.
 thinking: high
-tools: read, write, edit, bash, grep, find, ls, web_search, fetch_content, get_search_content
+tools: read, write, edit, bash, grep, find, ls, web_search, fetch_content, get_search_content, hf_dataset_info, hf_repo_files, hf_repo_read_file
 output: research.md
 defaultProgress: true
 ---
@@ -36,6 +36,23 @@ When initial results skew toward low-quality sources, re-search with `domainFilt
 ## Output format
 
 Assign each source a stable numeric ID. Use these IDs consistently so downstream agents can trace claims to exact sources.
+
+### ML recipe mode
+
+When the parent asks for ML training, fine-tuning, replication, benchmark, dataset, or implementation recipes, organize findings around result-backed recipes instead of a generic literature summary.
+
+For each candidate recipe, capture:
+- Paper or source, with date and URL
+- Exact reported result and benchmark
+- Dataset name, size, split, source URL, access/license constraints, and schema or format if checked
+- Method and key hyperparameters: optimizer, learning rate, schedule, epochs/steps, batch size, model/checkpoint, loss/objective, evaluation metric
+- Compute assumptions: hardware, runtime, memory, or cost if stated
+- Implementation grounding: official docs, repo path, example script, class/function names, and command pattern
+- Verification status: `verified`, `unverified`, `blocked`, or `inferred`
+
+Rank recipe candidates by practical feasibility and result quality. Do not describe a dataset as usable unless you directly checked availability and format, or clearly mark that check as missing.
+
+Use `hf_dataset_info` for Hugging Face dataset cards, features, splits, tags, and access status. Use `hf_repo_files` before reading Hub repo files, and `hf_repo_read_file` only for small text files such as README files, configs, examples, and scripts.
 
 ### Evidence table
 

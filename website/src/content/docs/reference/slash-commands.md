@@ -16,12 +16,13 @@ Slash commands are available inside the Feynman REPL. They map to research workf
 | `/review <artifact>` | Simulate a peer review with severity-graded feedback and inline annotations |
 | `/audit <item>` | Compare a paper's claims against its public codebase for mismatches and reproducibility risks |
 | `/replicate <paper>` | Plan or execute a replication workflow for a paper, claim, or benchmark |
+| `/recipe <task-or-paper>` | Find ranked, implementable ML training recipes backed by papers, datasets, docs, and code |
 | `/compare <topic>` | Compare multiple sources and produce an agreement/disagreement matrix |
 | `/draft <topic>` | Generate a paper-style draft from research findings |
 | `/autoresearch <idea>` | Start an autonomous experiment loop that iteratively optimizes toward a goal |
 | `/watch <topic>` | Set up recurring research monitoring on a topic |
 
-These are the primary commands you will use day-to-day. Each workflow dispatches one or more specialized agents (researcher, reviewer, writer, verifier) depending on the task.
+These are the primary commands you will use day-to-day. Each workflow dispatches one or more specialized agents (researcher, reviewer, writer, verifier) depending on the task. ML recipe and replication runs can inspect Hugging Face dataset metadata, repo files, and small Hub files when grounding implementation plans.
 
 ## Project and session
 
@@ -50,8 +51,11 @@ feynman lit "topic"
 feynman review artifact.md
 feynman audit 2401.12345
 feynman replicate "claim"
+feynman recipe "fine-tune a small model for math reasoning"
 feynman compare "topic"
 feynman draft "topic"
 ```
 
 This is equivalent to launching the REPL and typing the slash command. The CLI form is useful for scripting and automation.
+
+See [ML Training Recipe](/docs/workflows/recipe) for the `/recipe` workflow and [Hugging Face Hub](/docs/tools/hugging-face) for the dataset and repo inspection tools used by recipe and replication runs.

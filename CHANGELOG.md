@@ -19,10 +19,19 @@ Use this file to track chronology, not release notes. Keep entries short, factua
 
 - Objective: Run another broad Feynman health sweep and take useful dependency/runtime fixes without bloating the wrapper.
 - Changed: Updated `@mariozechner/pi-ai` and `@mariozechner/pi-coding-agent` to `0.73.0`; updated `@clack/prompts` to `1.3.0`; bumped the package to `0.2.45`; added release notes.
-- Verified: Working tree started clean; open GitHub issues and PRs were empty; latest main release workflow was green; `npm test` passed with 154/154; typecheck, root build, website build, `feynman doctor`, `npm audit --omit=dev`, and `npm pack --dry-run` passed; JSONL RPC `get_state` plus `bash` returned `FEYNMAN_RPC_OK`.
+- Verified: Working tree started clean; open GitHub issues and PRs were empty; latest main release workflow was green; `npm test` passed with 154/154; typecheck, root build, website build, `feynman doctor`, `npm audit --omit=dev`, and `npm pack --dry-run` passed; JSONL RPC `get_state` plus `bash` returned `FEYNMAN_RPC_OK`; release CI published npm `0.2.45`, built native bundles, and created the GitHub release; global `feynman@0.2.45` installed and passed doctor plus RPC smoke.
 - Failed / learned: TypeScript `6.0.3` is available as a major upgrade, but this pass intentionally did not take that compiler jump because the runtime wrapper benefit is low relative to release risk.
-- Blockers: Need final post-bump validation, commit, push, release workflow confirmation, and installed CLI update.
-- Next: Re-run validation after the version bump, push `main`, watch release CI, then install `@companion-ai/feynman@0.2.45` globally.
+- Blockers: None for the runtime refresh.
+- Next: Keep TypeScript 6 as a separate deliberate migration, not part of a runtime refresh.
+
+### 2026-05-07 05:20 PDT — ml-recipe-workflow
+
+- Objective: Review and finish the pending ML recipe workflow instead of leaving it as unverified local drift.
+- Changed: Added the `/recipe` workflow, read-only Hugging Face Hub inspection tools, researcher recipe-mode guidance, docs, and focused Hugging Face tool tests; bumped the package to `0.2.46`.
+- Verified: Context7 docs for Hugging Face.js confirm the Hub list/download model; live Hub checks returned HTTP 200 for dataset metadata, dataset tree, model tree, and README reads; mocked unit tests cover tool registration, auth, encoded URLs, limits, and truncation; `npm test` passed with 156/156; typecheck, root build, website build, CLI help, and `git diff --check` passed.
+- Failed / learned: The global `0.2.45` release correctly did not include the pending recipe workflow, so this needs its own versioned release instead of being described under `0.2.45`.
+- Blockers: Need post-bump pack/audit validation, commit, push, release workflow confirmation, and global install update to `0.2.46`.
+- Next: Run final validation, push `main`, watch release CI, then install `@companion-ai/feynman@0.2.46` globally.
 
 ### 2026-05-06 19:04 PDT — audit-cleanup
 
