@@ -113,7 +113,7 @@ to confirm the local model is available and make it the default.
 
 ## Stage 3: Optional packages
 
-Feynman's core ships with the essentials, including web access, subagents, memory, session search, and telemetry. On platforms with supported optional presets, the wizard can offer extras:
+Feynman's core ships with the essentials, including web access, subagents, memory, and session search. On platforms with supported optional presets, the wizard can offer extras:
 
 - **generative-ui** -- Interactive HTML-style widgets for rich output on macOS
 
