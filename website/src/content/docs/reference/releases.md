@@ -7,6 +7,17 @@ order: 4
 
 This page summarizes what changed in recent Feynman releases. GitHub releases use the same version-specific notes from the repository `RELEASES.md` file.
 
+## v0.2.50 - 2026-05-09
+
+### Skills Installer
+
+- Added an explicit Codex skills target for standalone skill installs: `--codex` on macOS/Linux and `-Scope Codex` on Windows.
+- Kept the existing default/user install behavior compatible while documenting the Codex, repo-local Claude/agent, and OpenCode target paths.
+
+### Validation
+
+- Added installer coverage for the Codex target and target-specific docs.
+
 ## v0.2.49 - 2026-05-07
 
 ### Website

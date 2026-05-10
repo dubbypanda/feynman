@@ -51,9 +51,21 @@ curl -fsSL https://feynman.is/install-skills | bash
 irm https://feynman.is/install-skills.ps1 | iex
 ```
 
-That installs the skill library into `~/.codex/skills/feynman`.
+That installs the skill library into `~/.codex/skills/feynman` for Codex. You can also name the Codex target explicitly:
 
-For a repo-local install instead:
+**macOS / Linux:**
+
+```bash
+curl -fsSL https://feynman.is/install-skills | bash -s -- --codex
+```
+
+**Windows (PowerShell):**
+
+```powershell
+& ([scriptblock]::Create((irm https://feynman.is/install-skills.ps1))) -Scope Codex
+```
+
+For a repo-local Claude/agent install instead:
 
 **macOS / Linux:**
 

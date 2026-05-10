@@ -15,6 +15,15 @@ Use this file to track chronology, not release notes. Keep entries short, factua
 - Blockers: ...
 - Next: ...
 
+### 2026-05-09 16:20 PDT — skills-install-targets
+
+- Objective: Make standalone skills installs unambiguous for Codex, Claude/agent repo-local use, and OpenCode.
+- Changed: Added explicit Codex installer scopes, documented target-specific commands, and added Codex smoke coverage.
+- Verified: Focused installer tests, full root test suite, root typecheck, root build, package dry-run, diff whitespace check, website typecheck, and website build passed locally.
+- Failed / learned: The existing default was already Codex, but the named scopes did not expose that clearly.
+- Blockers: None.
+- Next: Push `0.2.50` and answer issue #161 with the Codex, repo-local, and OpenCode commands.
+
 ### 2026-05-07 15:05 PDT — node24-core-researcher
 
 - Objective: Fix the Node 24 regression from the default Pi package set while keeping Feynman focused on the core AI researcher path.

@@ -1,7 +1,7 @@
 param(
   [string]$Version = "latest",
-  [ValidateSet("User", "Repo", "OpenCode")]
-  [string]$Scope = "User",
+  [ValidateSet("Codex", "User", "Repo", "OpenCode")]
+  [string]$Scope = "Codex",
   [string]$TargetDir = ""
 )
 
@@ -122,7 +122,7 @@ try {
   } elseif ($Scope -eq "OpenCode") {
     Write-Host "OpenCode project skills will be discovered from .opencode/skills."
   } else {
-    Write-Host "User-level skills will be discovered from `$CODEX_HOME/skills."
+    Write-Host "Codex user skills will be discovered from `$CODEX_HOME/skills."
   }
 
   Write-Host "Feynman skills $resolvedVersion installed successfully."
