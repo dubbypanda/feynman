@@ -448,3 +448,12 @@ Use this file to track chronology, not release notes. Keep entries short, factua
 - Failed / learned: Running `feynman --mode rpc "prompt"` is not a valid deep RPC smoke; the actual protocol requires JSON-line commands on stdin and keeping stdin open.
 - Blockers: Need push `v0.2.42`, wait for native release assets, then re-run the same RPC smoke against the released native asset before closing this loop.
 - Next: Commit, push, verify CI/native release, and test the released `v0.2.42` asset end to end.
+
+### 2026-05-09 18:38 PDT — issue-158-160-runtime-sweep
+
+- Objective: Address the current open tracker items rather than only the already-shipped package-peer fix.
+- Changed: Added top-of-prompt tool discipline to every workflow; extended the Pi agent-core runtime patch to normalize common hallucinated tool aliases (`search_web` to `web_search`, bare `fetch` / `WebFetch` / `read_url_content` to `fetch_content`); patched bundled alpha-hub search to fall back to `discover_papers` when alphaXiv removes older search tool names; seeded bundled runtime packages before package updates; included `typebox` plus both legacy `@mariozechner/*` and current `@earendil-works/*` Pi runtime peers; applied the Windows docker-probe fix from PR `#157`; bumped to `v0.2.52`.
+- Verified: `npm test`, `npm run typecheck`, `npm run build`, root and website production `npm audit`, website typecheck/build, `feynman doctor`, `feynman update`, `npm pack --dry-run`, and runtime archive extraction all passed. The installed Feynman prefix now has bundled links for `typebox` and `@earendil-works/pi-coding-agent`.
+- Failed / learned: The public alphaXiv MCP docs still list the older search tools, but issue `#159` reports a live authenticated tools/list response with only `discover_papers`; the fix therefore keeps old-tool calls first and only falls back on specific `Tool ... not found` failures. The comment on issue `#160` cited old `pi-btw` / `pi-markdown-preview` versions, but the current npm tarballs are the ones importing `@earendil-works/*`, so the repair path covers both namespaces.
+- Blockers: Push/release and GitHub issue/PR comments are still pending in this run.
+- Next: Commit, push `v0.2.52`, wait for the publish workflow, then close/comment the resolved tracker items with exact release evidence.

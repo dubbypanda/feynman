@@ -6,6 +6,7 @@ import { delimiter, dirname, isAbsolute, relative, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { FEYNMAN_LOGO_HTML } from "../logo.mjs";
 import { patchAlphaHubAuthSource } from "./lib/alpha-hub-auth-patch.mjs";
+import { patchAlphaHubSearchSource } from "./lib/alpha-hub-search-patch.mjs";
 import { patchPiAgentCoreSource } from "./lib/pi-agent-core-patch.mjs";
 import { patchPiExtensionLoaderSource } from "./lib/pi-extension-loader-patch.mjs";
 import { patchPiPackageManagerSource } from "./lib/pi-package-manager-patch.mjs";
@@ -939,12 +940,22 @@ if (oauthPagePath && existsSync(oauthPagePath)) {
 const alphaHubAuthPath = findPackageRoot("@companion-ai/alpha-hub")
 	? resolve(findPackageRoot("@companion-ai/alpha-hub"), "src", "lib", "auth.js")
 	: null;
+const alphaHubSearchPath = findPackageRoot("@companion-ai/alpha-hub")
+	? resolve(findPackageRoot("@companion-ai/alpha-hub"), "src", "lib", "alphaxiv.js")
+	: null;
 
 if (alphaHubAuthPath && existsSync(alphaHubAuthPath)) {
 	const source = readFileSync(alphaHubAuthPath, "utf8");
 	const patched = patchAlphaHubAuthSource(source);
 	if (patched !== source) {
 		writeFileSync(alphaHubAuthPath, patched, "utf8");
+	}
+}
+if (alphaHubSearchPath && existsSync(alphaHubSearchPath)) {
+	const source = readFileSync(alphaHubSearchPath, "utf8");
+	const patched = patchAlphaHubSearchSource(source);
+	if (patched !== source) {
+		writeFileSync(alphaHubSearchPath, patched, "utf8");
 	}
 }
 

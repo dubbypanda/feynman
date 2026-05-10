@@ -53,7 +53,18 @@ const PI_RUNTIME_PEER_PACKAGE_NAMES = [
 	"@mariozechner/pi-ai",
 	"@mariozechner/pi-coding-agent",
 	"@mariozechner/pi-tui",
+	"@earendil-works/pi-agent-core",
+	"@earendil-works/pi-ai",
+	"@earendil-works/pi-coding-agent",
+	"@earendil-works/pi-tui",
+	"typebox",
 ] as const;
+const FALLBACK_RUNTIME_PEER_SPECS: Partial<Record<(typeof PI_RUNTIME_PEER_PACKAGE_NAMES)[number], string>> = {
+	"@earendil-works/pi-agent-core": "@earendil-works/pi-agent-core@0.74.0",
+	"@earendil-works/pi-ai": "@earendil-works/pi-ai@0.74.0",
+	"@earendil-works/pi-coding-agent": "@earendil-works/pi-coding-agent@0.74.0",
+	"@earendil-works/pi-tui": "@earendil-works/pi-tui@0.74.0",
+};
 
 function createPackageContext(workingDir: string, agentDir: string) {
 	applyFeynmanPackageManagerEnv(agentDir);
@@ -158,7 +169,7 @@ function resolveRuntimePeerSpec(packageName: string): string | undefined {
 		const version = readInstalledPackageVersion(packageRoot);
 		if (version) return `${packageName}@${version}`;
 	}
-	return undefined;
+	return FALLBACK_RUNTIME_PEER_SPECS[packageName as (typeof PI_RUNTIME_PEER_PACKAGE_NAMES)[number]];
 }
 
 function withRuntimePeerSpecs(specs: string[]): string[] {
@@ -405,6 +416,7 @@ export async function updateConfiguredPackages(
 	source?: string,
 ): Promise<UpdateConfiguredPackagesResult> {
 	const { settingsManager, packageManager } = createPackageContext(workingDir, agentDir);
+	seedBundledWorkspacePackages(agentDir, APP_ROOT, []);
 
 	if (source) {
 		const parsed = parseNpmSource(source);

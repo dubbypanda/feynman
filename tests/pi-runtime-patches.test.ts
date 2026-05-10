@@ -97,6 +97,8 @@ test("patchPiRuntimeNodeModules patches installed Pi runtime files", async () =>
 	const patched = readFileSync(agentLoopPath, "utf8");
 	assert.match(patched, /function normalizeFeynmanToolAlias/);
 	assert.match(patched, /\["google:search", "web_search"\]/);
+	assert.match(patched, /\["search_web", "web_search"\]/);
+	assert.match(patched, /\["fetch", "fetch_content"\]/);
 	assert.match(patched, /prepareToolCallArguments\(tool, effectiveToolCall\)/);
 	const patchedTui = readFileSync(tuiPath, "utf8");
 	assert.match(patchedTui, /line = sliceByColumn\(line, 0, width, true\)/);

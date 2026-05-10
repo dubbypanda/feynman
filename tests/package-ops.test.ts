@@ -318,6 +318,10 @@ test("installPackageSources installs Pi runtime peers beside Pi packages", async
 	assert.ok(invocations[0]?.some((entry) => /^@mariozechner\/pi-coding-agent@/.test(entry)));
 	assert.ok(invocations[0]?.some((entry) => /^@mariozechner\/pi-ai@/.test(entry)));
 	assert.ok(invocations[0]?.some((entry) => /^@mariozechner\/pi-tui@/.test(entry)));
+	assert.ok(invocations[0]?.some((entry) => /^@earendil-works\/pi-coding-agent@/.test(entry)));
+	assert.ok(invocations[0]?.some((entry) => /^@earendil-works\/pi-ai@/.test(entry)));
+	assert.ok(invocations[0]?.some((entry) => /^@earendil-works\/pi-tui@/.test(entry)));
+	assert.ok(invocations[0]?.some((entry) => /^typebox@/.test(entry)));
 });
 
 test("updateConfiguredPackages batches multiple npm updates into a single install per scope", async () => {

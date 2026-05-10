@@ -19,21 +19,44 @@ function normalizeFeynmanSearchToolArguments(args) {
     return normalized;
 }
 
+function normalizeFeynmanFetchToolArguments(args) {
+    if (!args || typeof args !== "object" || Array.isArray(args)) {
+        return args;
+    }
+    const normalized = { ...args };
+    if (Array.isArray(normalized.urls) || typeof normalized.url === "string") {
+        return normalized;
+    }
+    if (Array.isArray(normalized.url)) {
+        normalized.urls = normalized.url;
+        delete normalized.url;
+    }
+    return normalized;
+}
+
 function normalizeFeynmanToolAlias(toolCall, tools) {
     const aliases = new Map([
         ["google:search", "web_search"],
         ["google_search", "web_search"],
         ["google.search", "web_search"],
         ["search_google", "web_search"],
+        ["search_web", "web_search"],
+        ["WebSearch", "web_search"],
+        ["fetch", "fetch_content"],
+        ["WebFetch", "fetch_content"],
+        ["read_url_content", "fetch_content"],
     ]);
     const targetName = aliases.get(toolCall.name);
     if (!targetName || !tools?.some((tool) => tool.name === targetName)) {
         return toolCall;
     }
+    const args = targetName === "fetch_content"
+        ? normalizeFeynmanFetchToolArguments(toolCall.arguments)
+        : normalizeFeynmanSearchToolArguments(toolCall.arguments);
     return {
         ...toolCall,
         name: targetName,
-        arguments: normalizeFeynmanSearchToolArguments(toolCall.arguments),
+        arguments: args,
     };
 }
 `;

@@ -7,6 +7,25 @@ order: 4
 
 This page summarizes what changed in recent Feynman releases. GitHub releases use the same version-specific notes from the repository `RELEASES.md` file.
 
+## v0.2.52 - 2026-05-09
+
+### Runtime Reliability
+
+- Seed bundled runtime packages before package updates so missing undeclared extension dependencies such as `typebox` are repaired before extension load.
+- Include Pi's `typebox` runtime package beside installed Pi packages when Feynman has to run npm directly.
+- Include the new `@earendil-works/*` Pi runtime package namespace beside the legacy `@mariozechner/*` namespace so updated Pi extensions such as `pi-btw` and `pi-markdown-preview` can load.
+- Patched alphaXiv search in the bundled alpha-hub runtime to fall back to the newer `discover_papers` MCP tool when alphaXiv no longer exposes the older search tool names.
+- Hardened model tool-call handling for common alias mistakes: `search_web` now maps to `web_search`, and bare `fetch` / `WebFetch` / `read_url_content` map to `fetch_content` with array URLs normalized.
+- Fixed the Windows docker probe in the research header so `cmd.exe` no longer emits localized mojibake from Unix-only `/dev/null` redirection.
+
+### Workflow Prompts
+
+- Added a shared tool-discipline block to every workflow prompt so lead agents see canonical tool names before workflow-specific instructions.
+
+### Validation
+
+- Added regression coverage for alphaXiv search fallback, Pi tool alias normalization, bundled runtime dependency installs, and prompt tool discipline.
+
 ## v0.2.51 - 2026-05-09
 
 ### Package Manager
