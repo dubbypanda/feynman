@@ -48,6 +48,12 @@ const FILTERED_INSTALL_OUTPUT_PATTERNS = [
 	/^run `npm fund` for details$/i,
 ];
 const APP_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..", "..");
+const PI_RUNTIME_PEER_PACKAGE_NAMES = [
+	"@mariozechner/pi-agent-core",
+	"@mariozechner/pi-ai",
+	"@mariozechner/pi-coding-agent",
+	"@mariozechner/pi-tui",
+] as const;
 
 function createPackageContext(workingDir: string, agentDir: string) {
 	applyFeynmanPackageManagerEnv(agentDir);
@@ -124,6 +130,48 @@ function dedupeNpmSources(sources: string[], updateToLatest: boolean): string[] 
 	}
 
 	return [...specs.values()];
+}
+
+function parseNpmSpecName(spec: string): string {
+	const match = spec.match(/^(@?[^@]+(?:\/[^@]+)?)(?:@.+)?$/);
+	return match?.[1] ?? spec;
+}
+
+function isPiRuntimePackageName(packageName: string): boolean {
+	return packageName.startsWith("pi-") || packageName.includes("/pi-");
+}
+
+function readInstalledPackageVersion(packageRoot: string): string | undefined {
+	try {
+		const pkg = JSON.parse(readFileSync(resolve(packageRoot, "package.json"), "utf8")) as { version?: unknown };
+		return typeof pkg.version === "string" ? pkg.version : undefined;
+	} catch {
+		return undefined;
+	}
+}
+
+function resolveRuntimePeerSpec(packageName: string): string | undefined {
+	for (const packageRoot of [
+		resolve(APP_ROOT, "node_modules", packageName),
+		resolve(APP_ROOT, ".feynman", "npm", "node_modules", packageName),
+	]) {
+		const version = readInstalledPackageVersion(packageRoot);
+		if (version) return `${packageName}@${version}`;
+	}
+	return undefined;
+}
+
+function withRuntimePeerSpecs(specs: string[]): string[] {
+	if (!specs.some((spec) => isPiRuntimePackageName(parseNpmSpecName(spec)))) {
+		return specs;
+	}
+
+	const existingPackageNames = new Set(specs.map(parseNpmSpecName));
+	const peerSpecs = PI_RUNTIME_PEER_PACKAGE_NAMES
+		.filter((packageName) => !existingPackageNames.has(packageName))
+		.map(resolveRuntimePeerSpec)
+		.filter((spec): spec is string => Boolean(spec));
+	return [...specs, ...peerSpecs];
 }
 
 function ensureProjectInstallRoot(workingDir: string): string {
@@ -210,7 +258,7 @@ async function runPackageManagerInstall(
 		args.push("--prefix", ensureProjectInstallRoot(workingDir));
 	}
 
-	args.push(...specs);
+	args.push(...withRuntimePeerSpecs(specs));
 	const suppressKnownNativeFailureOutput = process.platform === "darwin" && specs.some((spec) => spec.startsWith("pi-generative-ui"));
 
 	await new Promise<void>((resolvePromise, reject) => {

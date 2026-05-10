@@ -24,6 +24,15 @@ Use this file to track chronology, not release notes. Keep entries short, factua
 - Blockers: None.
 - Next: Push `0.2.50` and answer issue #161 with the Codex, repo-local, and OpenCode commands.
 
+### 2026-05-09 17:05 PDT — pi-package-peer-deps
+
+- Objective: Address the missing peer-runtime dependency class reported as a follow-up on issue #80 and stop the issue monitor from missing new comments.
+- Changed: Updated the issue heartbeat to include new comments; changed Pi package npm installs/updates to install the pinned Pi runtime peer packages beside Pi packages; bumped to `0.2.51`.
+- Verified: Focused package-manager tests, full root test suite, root typecheck, root build, package dry-run, diff whitespace check, website typecheck, and website build passed locally.
+- Failed / learned: The pasted `@earendil-works/pi-coding-agent` imports do not match the current npm tarballs for `pi-btw@0.3.7` or `pi-markdown-preview@0.9.7`, which currently import `@mariozechner/*`; the real Feynman-side bug is legacy peer dependency mode leaving peer-only runtime packages absent.
+- Blockers: None.
+- Next: Push `0.2.51`, watch release CI, and report the monitor/fix status.
+
 ### 2026-05-07 15:05 PDT — node24-core-researcher
 
 - Objective: Fix the Node 24 regression from the default Pi package set while keeping Feynman focused on the core AI researcher path.

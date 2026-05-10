@@ -4,6 +4,17 @@ This file is the public release history for Feynman. Keep entries user-facing: w
 
 GitHub release notes are generated from the matching `## vX.Y.Z` section in this file.
 
+## v0.2.51 - 2026-05-09
+
+### Package Manager
+
+- Hardened Pi package installs and updates so peer-only Pi runtime packages are materialized into Feynman's npm prefix beside installed Pi packages.
+- This prevents optional or legacy Pi packages from failing at extension load time when they import Pi runtime modules that npm did not install because Feynman uses legacy peer dependency mode.
+
+### Validation
+
+- Added package-manager coverage for installing Pi runtime peers beside Pi npm packages.
+
 ## v0.2.50 - 2026-05-09
 
 ### Skills Installer

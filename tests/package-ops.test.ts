@@ -292,6 +292,34 @@ test("installPackageSources disables inherited npm dry-run config for child inst
 	}
 });
 
+test("installPackageSources installs Pi runtime peers beside Pi packages", async () => {
+	const root = mkdtempSync(join(tmpdir(), "feynman-package-ops-"));
+	const workingDir = resolve(root, "project");
+	const agentDir = resolve(root, "agent");
+	const logPath = resolve(root, "npm-invocations.jsonl");
+	mkdirSync(workingDir, { recursive: true });
+
+	const scriptPath = writeFakeNpmScript(root, [
+		`import { appendFileSync } from "node:fs";`,
+		`appendFileSync(${JSON.stringify(logPath)}, JSON.stringify(process.argv.slice(2)) + "\\n", "utf8");`,
+		"process.exit(0);",
+	].join("\n"));
+
+	writeSettings(agentDir, {
+		npmCommand: [process.execPath, scriptPath],
+	});
+
+	const result = await installPackageSources(workingDir, agentDir, ["npm:pi-btw"]);
+
+	assert.deepEqual(result.installed, ["npm:pi-btw"]);
+	const invocations = readFileSync(logPath, "utf8").trim().split("\n").map((line) => JSON.parse(line) as string[]);
+	assert.equal(invocations.length, 1);
+	assert.ok(invocations[0]?.includes("pi-btw"));
+	assert.ok(invocations[0]?.some((entry) => /^@mariozechner\/pi-coding-agent@/.test(entry)));
+	assert.ok(invocations[0]?.some((entry) => /^@mariozechner\/pi-ai@/.test(entry)));
+	assert.ok(invocations[0]?.some((entry) => /^@mariozechner\/pi-tui@/.test(entry)));
+});
+
 test("updateConfiguredPackages batches multiple npm updates into a single install per scope", async () => {
 	const root = mkdtempSync(join(tmpdir(), "feynman-package-ops-"));
 	const workingDir = resolve(root, "project");
