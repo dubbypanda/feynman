@@ -18,13 +18,20 @@ function patchFileIfPresent(path: string, patchSource: (source: string) => strin
 }
 
 export function patchPiRuntimeNodeModules(appRoot: string): boolean {
-	const agentCoreChanged = patchFileIfPresent(
-		resolve(appRoot, "node_modules", "@mariozechner", "pi-agent-core", "dist", "agent-loop.js"),
-		patchPiAgentCoreSource,
-	);
-	const tuiChanged = patchFileIfPresent(
-		resolve(appRoot, "node_modules", "@mariozechner", "pi-tui", "dist", "tui.js"),
-		patchPiTuiSource,
-	);
-	return agentCoreChanged || tuiChanged;
+	const nodeModuleRoots = [
+		resolve(appRoot, "node_modules"),
+		resolve(appRoot, ".feynman", "npm", "node_modules"),
+	];
+	let changed = false;
+	for (const nodeModulesPath of nodeModuleRoots) {
+		changed = patchFileIfPresent(
+			resolve(nodeModulesPath, "@mariozechner", "pi-agent-core", "dist", "agent-loop.js"),
+			patchPiAgentCoreSource,
+		) || changed;
+		changed = patchFileIfPresent(
+			resolve(nodeModulesPath, "@mariozechner", "pi-tui", "dist", "tui.js"),
+			patchPiTuiSource,
+		) || changed;
+	}
+	return changed;
 }

@@ -1,8 +1,18 @@
-import test from "node:test";
 import assert from "node:assert/strict";
+import { mkdirSync, mkdtempSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
+import test from "node:test";
 import { pathToFileURL } from "node:url";
 
-import { applyFeynmanPackageManagerEnv, buildPiArgs, buildPiEnv, resolvePiPaths, toNodeImportSpecifier } from "../src/pi/runtime.js";
+import {
+	applyFeynmanPackageManagerEnv,
+	buildPiArgs,
+	buildPiEnv,
+	resolvePiPaths,
+	toNodeImportSpecifier,
+	validatePiInstallation,
+} from "../src/pi/runtime.js";
 
 test("buildPiArgs includes configured runtime paths and prompt", () => {
 	const args = buildPiArgs({
@@ -176,6 +186,27 @@ test("resolvePiPaths includes the Promise.withResolvers polyfill path", () => {
 	const paths = resolvePiPaths("/repo/feynman");
 
 	assert.equal(paths.promisePolyfillPath, "/repo/feynman/dist/system/promise-polyfill.js");
+});
+
+test("resolvePiPaths falls back to the vendored runtime workspace in packed installs", () => {
+	const appRoot = mkdtempSync(join(tmpdir(), "feynman-packed-runtime-"));
+	const piDist = join(appRoot, ".feynman", "npm", "node_modules", "@mariozechner", "pi-coding-agent", "dist");
+	mkdirSync(piDist, { recursive: true });
+	writeFileSync(join(piDist, "cli.js"), "", "utf8");
+	writeFileSync(join(piDist, "main.js"), "", "utf8");
+	mkdirSync(join(appRoot, "dist", "pi"), { recursive: true });
+	mkdirSync(join(appRoot, "dist", "system"), { recursive: true });
+	mkdirSync(join(appRoot, "extensions"), { recursive: true });
+	mkdirSync(join(appRoot, "prompts"), { recursive: true });
+	writeFileSync(join(appRoot, "dist", "pi", "pi-cli-wrapper.js"), "", "utf8");
+	writeFileSync(join(appRoot, "dist", "system", "promise-polyfill.js"), "", "utf8");
+	writeFileSync(join(appRoot, "extensions", "research-tools.ts"), "", "utf8");
+
+	const paths = resolvePiPaths(appRoot);
+
+	assert.equal(paths.piPackageRoot, join(appRoot, ".feynman", "npm", "node_modules", "@mariozechner", "pi-coding-agent"));
+	assert.equal(paths.piCliPath, join(piDist, "cli.js"));
+	assert.deepEqual(validatePiInstallation(appRoot), []);
 });
 
 test("toNodeImportSpecifier converts absolute preload paths to file URLs", () => {

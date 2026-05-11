@@ -394,6 +394,15 @@ Use this file to track chronology, not release notes. Keep entries short, factua
 - Blockers: npm `latest` remains `0.2.52` until the npm trusted publisher is updated for `companion-inc/feynman` or an `NPM_TOKEN` secret is provided.
 - Next: Re-run the publish workflow after npm auth is fixed, then report release evidence on issues `#162` and `#163`.
 
+### 2026-05-11 09:50 PDT — packed-install-e2e
+
+- Objective: Run a true packed-install E2E for the latest Feynman runtime fixes.
+- Changed: Fixed packed npm installs that hoist dependencies outside Feynman's package root by falling back to the vendored `.feynman/npm` Pi runtime; patched both package-local and vendored runtime node_modules; bumped Feynman to `v0.2.54`.
+- Verified: Focused runtime tests, full `npm test`, `npm run typecheck`, root build, runtime workspace prep, packed tarball install into a clean temp prefix/home, `feynman doctor`, prompt launch past Pi resolution, issue-specific installed runtime patch inspection, `node bin/feynman.js --version`, diff whitespace check, and website build with Node 24 passed.
+- Failed / learned: The first packed-install E2E showed `feynman --mode json --prompt ...` failed before Pi launch with `Pi CLI not found` because runtime resolution only checked package-local `node_modules`.
+- Blockers: npm publishing is still externally blocked until npm trusted publishing or `NPM_TOKEN` is updated for `companion-inc/feynman`.
+- Next: Push `v0.2.54`, watch release CI, and rerun npm publish after npm trust/secret access is fixed.
+
 ### 2026-04-12 13:20 PDT — capital-france (citation verification brief)
 
 - Objective: Verify citations in the capital-of-France draft and produce a cited verifier brief.

@@ -37,19 +37,29 @@ export function applyFeynmanPackageManagerEnv(feynmanAgentDir: string): string {
 }
 
 export function resolvePiPaths(appRoot: string) {
+	const packageLocalPiRoot = resolve(appRoot, "node_modules", "@mariozechner", "pi-coding-agent");
+	const workspaceNodeModulesPath = resolve(appRoot, ".feynman", "npm", "node_modules");
+	const workspacePiRoot = resolve(workspaceNodeModulesPath, "@mariozechner", "pi-coding-agent");
+	const piPackageRoot = existsSync(resolve(packageLocalPiRoot, "dist", "cli.js")) || !existsSync(resolve(workspacePiRoot, "dist", "cli.js"))
+		? packageLocalPiRoot
+		: workspacePiRoot;
+	const packageLocalTsxLoaderPath = resolve(appRoot, "node_modules", "tsx", "dist", "loader.mjs");
+	const workspaceTsxLoaderPath = resolve(workspaceNodeModulesPath, "tsx", "dist", "loader.mjs");
 	return {
-		piPackageRoot: resolve(appRoot, "node_modules", "@mariozechner", "pi-coding-agent"),
-		piCliPath: resolve(appRoot, "node_modules", "@mariozechner", "pi-coding-agent", "dist", "cli.js"),
-		piMainPath: resolve(appRoot, "node_modules", "@mariozechner", "pi-coding-agent", "dist", "main.js"),
+		piPackageRoot,
+		piCliPath: resolve(piPackageRoot, "dist", "cli.js"),
+		piMainPath: resolve(piPackageRoot, "dist", "main.js"),
 		piCliWrapperPath: resolve(appRoot, "dist", "pi", "pi-cli-wrapper.js"),
 		piCliWrapperSourcePath: resolve(appRoot, "src", "pi", "pi-cli-wrapper.ts"),
 		promisePolyfillPath: resolve(appRoot, "dist", "system", "promise-polyfill.js"),
 		promisePolyfillSourcePath: resolve(appRoot, "src", "system", "promise-polyfill.ts"),
-		tsxLoaderPath: resolve(appRoot, "node_modules", "tsx", "dist", "loader.mjs"),
+		tsxLoaderPath: existsSync(packageLocalTsxLoaderPath) || !existsSync(workspaceTsxLoaderPath)
+			? packageLocalTsxLoaderPath
+			: workspaceTsxLoaderPath,
 		researchToolsPath: resolve(appRoot, "extensions", "research-tools.ts"),
 		promptTemplatePath: resolve(appRoot, "prompts"),
 		systemPromptPath: resolve(appRoot, ".feynman", "SYSTEM.md"),
-		piWorkspaceNodeModulesPath: resolve(appRoot, ".feynman", "npm", "node_modules"),
+		piWorkspaceNodeModulesPath: workspaceNodeModulesPath,
 		nodeModulesBinPath: resolve(appRoot, "node_modules", ".bin"),
 	};
 }

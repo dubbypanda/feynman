@@ -4,6 +4,18 @@ This file is the public release history for Feynman. Keep entries user-facing: w
 
 GitHub release notes are generated from the matching `## vX.Y.Z` section in this file.
 
+## v0.2.54 - 2026-05-11
+
+### Runtime Reliability
+
+- Fixed packed npm installs that hoist package dependencies outside Feynman's package root. Feynman now falls back to its vendored `.feynman/npm` runtime workspace when resolving Pi, so `feynman doctor` and prompt launches work from a clean packed install.
+- Applied runtime node-module patches to both package-local dependencies and the vendored runtime workspace.
+
+### Validation
+
+- Added regression coverage for packed-install Pi path resolution and vendored runtime patching.
+- Added an isolated packed-install E2E that installs the generated tarball into a clean prefix/home and launches Feynman from that install.
+
 ## v0.2.53 - 2026-05-11
 
 ### Runtime Reliability

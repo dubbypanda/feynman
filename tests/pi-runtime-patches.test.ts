@@ -106,6 +106,22 @@ test("patchPiRuntimeNodeModules patches installed Pi runtime files", async () =>
 	assert.equal(patchPiRuntimeNodeModules(appRoot), false);
 });
 
+test("patchPiRuntimeNodeModules patches the vendored runtime workspace", async () => {
+	const appRoot = mkdtempSync(join(tmpdir(), "feynman-workspace-runtime-patches-"));
+	const agentLoopPath = join(appRoot, ".feynman", "npm", "node_modules", "@mariozechner", "pi-agent-core", "dist", "agent-loop.js");
+	const tuiPath = join(appRoot, ".feynman", "npm", "node_modules", "@mariozechner", "pi-tui", "dist", "tui.js");
+	await mkdir(dirname(agentLoopPath), { recursive: true });
+	await mkdir(dirname(tuiPath), { recursive: true });
+	writeFileSync(agentLoopPath, SOURCE, "utf8");
+	writeFileSync(tuiPath, TUI_SOURCE, "utf8");
+
+	assert.equal(patchPiRuntimeNodeModules(appRoot), true);
+
+	assert.match(readFileSync(agentLoopPath, "utf8"), /function normalizeFeynmanToolAlias/);
+	assert.match(readFileSync(tuiPath, "utf8"), /line = sliceByColumn\(line, 0, width, true\)/);
+	assert.equal(patchPiRuntimeNodeModules(appRoot), false);
+});
+
 test("patchPiRuntimeNodeModules is a no-op when Pi agent-core is absent", () => {
 	const appRoot = mkdtempSync(join(tmpdir(), "feynman-runtime-patches-missing-"));
 
