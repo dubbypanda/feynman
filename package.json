@@ -1,6 +1,6 @@
 {
   "name": "@companion-ai/feynman",
-  "version": "0.2.55",
+  "version": "0.2.56",
   "description": "Research-first CLI agent built on Pi and alphaXiv",
   "license": "MIT",
   "type": "module",
@@ -98,7 +98,7 @@
     },
     "fast-uri": "3.1.2",
     "fast-xml-builder": "1.2.0",
-    "protobufjs": "7.5.5",
+    "protobufjs": "7.5.8",
     "minimatch": {
       "brace-expansion": "5.0.5"
     }

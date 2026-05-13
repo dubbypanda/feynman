@@ -7,6 +7,16 @@ order: 4
 
 This page summarizes what changed in recent Feynman releases. GitHub releases use the same version-specific notes from the repository `RELEASES.md` file.
 
+## v0.2.56 - 2026-05-13
+
+### Security
+
+- Updated the `protobufjs` dependency override from `7.5.5` to `7.5.8`, which pulls in the patched `@protobufjs/utf8` release and clears the current production audit advisory set.
+
+### Validation
+
+- Re-ran the root production audit after the override refresh and confirmed it reports zero vulnerabilities.
+
 ## v0.2.55 - 2026-05-13
 
 ### Model Catalog

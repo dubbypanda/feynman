@@ -15,6 +15,15 @@ Use this file to track chronology, not release notes. Keep entries short, factua
 - Blockers: ...
 - Next: ...
 
+### 2026-05-13 11:55 PDT — audit-detail-sweep
+
+- Objective: Tighten the current Feynman release line after a broad detail sweep.
+- Changed: Bumped the root `protobufjs` override to `7.5.8`, refreshed the lockfile, added `0.2.56` release notes, and kept the package line publishable with a new patch version.
+- Verified: Tracker and PR lists were empty; root tests, typecheck, build, root and website production audits, website build, diff whitespace check, package dry-run, and clean installed-tarball `feynman --version` plus `feynman doctor` passed after the override refresh.
+- Failed / learned: The first root production audit exposed a new `protobufjs <=7.5.5` advisory from the existing override, so `0.2.55` needed a follow-up security patch rather than a no-op sweep.
+- Blockers: Need commit, push, release workflow confirmation, and npm latest verification for `0.2.56`.
+- Next: Push `main`, watch release CI, then verify npm latest.
+
 ### 2026-05-09 16:20 PDT — skills-install-targets
 
 - Objective: Make standalone skills installs unambiguous for Codex, Claude/agent repo-local use, and OpenCode.
