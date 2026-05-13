@@ -51,8 +51,11 @@ function choosePreferredModel(
 		{ provider: "anthropic", id: "claude-opus-4-6" },
 		{ provider: "anthropic", id: "claude-opus-4-5" },
 		{ provider: "anthropic", id: "claude-sonnet-4-5" },
+		{ provider: "openai", id: "gpt-5.5" },
 		{ provider: "openai", id: "gpt-5.4" },
 		{ provider: "openai", id: "gpt-5" },
+		{ provider: "openai-codex", id: "gpt-5.5" },
+		{ provider: "openai-codex", id: "gpt-5.4" },
 	];
 
 	for (const preferred of preferences) {

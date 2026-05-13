@@ -73,12 +73,20 @@ const RESEARCH_MODEL_PREFERENCES = [
 		reason: "balanced reasoning and speed for iterative research sessions",
 	},
 	{
+		spec: "openai/gpt-5.5",
+		reason: "strong general reasoning and drafting quality for research tasks",
+	},
+	{
 		spec: "openai/gpt-5.4",
 		reason: "strong general reasoning and drafting quality for research tasks",
 	},
 	{
 		spec: "openai/gpt-5",
 		reason: "strong general reasoning and drafting quality for research tasks",
+	},
+	{
+		spec: "openai-codex/gpt-5.5",
+		reason: "strong research + coding balance when Pi exposes Codex directly",
 	},
 	{
 		spec: "openai-codex/gpt-5.4",

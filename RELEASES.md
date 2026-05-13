@@ -4,6 +4,18 @@ This file is the public release history for Feynman. Keep entries user-facing: w
 
 GitHub release notes are generated from the matching `## vX.Y.Z` section in this file.
 
+## v0.2.55 - 2026-05-13
+
+### Model Catalog
+
+- Added OpenAI `gpt-5.5` to Feynman's research model preference order so it can be recommended, auto-selected, and surfaced ahead of older OpenAI GPT-5 models.
+- Added OpenAI Codex `gpt-5.5` to the research preference order for users whose Pi runtime exposes Codex directly.
+- Updated first-run/default setup preferences so OpenAI-only installs choose `openai/gpt-5.5` when available.
+
+### Validation
+
+- Added regression coverage for OpenAI `gpt-5.5` recommendation, model sorting, and default setup seeding.
+
 ## v0.2.54 - 2026-05-11
 
 ### Runtime Reliability

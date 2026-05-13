@@ -84,17 +84,20 @@ test("buildModelStatusSnapshotFromRecords returns available models sorted by res
 	const snapshot = buildModelStatusSnapshotFromRecords(
 		[
 			{ provider: "openai", id: "gpt-5.4" },
+			{ provider: "openai", id: "gpt-5.5" },
 			{ provider: "anthropic", id: "claude-opus-4-6" },
 		],
 		[
 			{ provider: "openai", id: "gpt-5.4" },
+			{ provider: "openai", id: "gpt-5.5" },
 			{ provider: "anthropic", id: "claude-opus-4-6" },
 		],
 		undefined,
 	);
 
 	assert.equal(snapshot.availableModels[0], "anthropic/claude-opus-4-6");
-	assert.equal(snapshot.availableModels[1], "openai/gpt-5.4");
+	assert.equal(snapshot.availableModels[1], "openai/gpt-5.5");
+	assert.equal(snapshot.availableModels[2], "openai/gpt-5.4");
 	assert.equal(snapshot.recommended, "anthropic/claude-opus-4-6");
 });
 

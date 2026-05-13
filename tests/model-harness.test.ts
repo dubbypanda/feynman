@@ -33,6 +33,16 @@ test("chooseRecommendedModel prefers the strongest authenticated research model"
 	assert.equal(recommendation?.spec, "anthropic/claude-opus-4-6");
 });
 
+test("chooseRecommendedModel prefers OpenAI gpt-5.5 over older OpenAI models", () => {
+	const authPath = createAuthPath({
+		openai: { type: "api_key", key: "openai-test-key" },
+	});
+
+	const recommendation = chooseRecommendedModel(authPath);
+
+	assert.equal(recommendation?.spec, "openai/gpt-5.5");
+});
+
 test("getAvailableModelRecords excludes expired OAuth credentials without an env fallback", () => {
 	const authPath = createAuthPath({
 		anthropic: {
@@ -151,14 +161,14 @@ test("buildModelStatusSnapshotFromRecords flags an invalid current model and sug
 	const snapshot = buildModelStatusSnapshotFromRecords(
 		[
 			{ provider: "anthropic", id: "claude-opus-4-6" },
-			{ provider: "openai", id: "gpt-5.4" },
+			{ provider: "openai", id: "gpt-5.5" },
 		],
-		[{ provider: "openai", id: "gpt-5.4" }],
+		[{ provider: "openai", id: "gpt-5.5" }],
 		"anthropic/claude-opus-4-6",
 	);
 
 	assert.equal(snapshot.currentValid, false);
-	assert.equal(snapshot.recommended, "openai/gpt-5.4");
+	assert.equal(snapshot.recommended, "openai/gpt-5.5");
 	assert.ok(snapshot.guidance.some((line) => line.includes("Configured default model is unavailable")));
 });
 
