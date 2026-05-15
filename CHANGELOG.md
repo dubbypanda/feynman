@@ -15,6 +15,15 @@ Use this file to track chronology, not release notes. Keep entries short, factua
 - Blockers: ...
 - Next: ...
 
+### 2026-05-15 03:07 PDT — editor-input-contrast
+
+- Objective: Fix issue `#165`, where macOS/iTerm users could not read typed text in Feynman's dark interactive input box.
+- Changed: Centralized the Pi TUI editor/theme patch, added an explicit editor input foreground, applied the patch to package-local Pi files, launch-time runtime patching, and the vendored runtime archive path; bumped the package to `0.2.57`; added release notes; and updated the website lockfile `devalue` transitive to `5.8.1` after audit flagged the older release.
+- Verified: Focused Pi TUI tests, full root tests, typecheck, root build, root production audit, website production audit, website build, runtime archive content inspection, package dry-run, packed tarball inspection, and clean installed-tarball `feynman --version` plus `feynman doctor` passed locally.
+- Failed / learned: The placeholder was readable because it already used a themed foreground; typed input inherited the terminal default foreground after Feynman added the dark editor background.
+- Blockers: Need commit, push, release workflow confirmation, npm latest verification, and issue closure.
+- Next: Push `main`, watch release CI, verify npm latest, then close `#165`.
+
 ### 2026-05-13 11:55 PDT — audit-detail-sweep
 
 - Objective: Tighten the current Feynman release line after a broad detail sweep.

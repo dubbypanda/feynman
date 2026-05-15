@@ -10,7 +10,7 @@ import { patchAlphaHubSearchSource } from "./lib/alpha-hub-search-patch.mjs";
 import { patchPiAgentCoreSource } from "./lib/pi-agent-core-patch.mjs";
 import { patchPiExtensionLoaderSource } from "./lib/pi-extension-loader-patch.mjs";
 import { patchPiPackageManagerSource } from "./lib/pi-package-manager-patch.mjs";
-import { patchPiTuiSource } from "./lib/pi-tui-patch.mjs";
+import { patchPiEditorSource, patchPiInteractiveThemeSource, patchPiTuiSource } from "./lib/pi-tui-patch.mjs";
 import { PI_WEB_ACCESS_PATCH_TARGETS, patchPiWebAccessSource } from "./lib/pi-web-access-patch.mjs";
 import { PI_SUBAGENTS_PATCH_TARGETS, patchPiSubagentsSource, stripPiSubagentBuiltinModelSource } from "./lib/pi-subagents-patch.mjs";
 
@@ -86,6 +86,24 @@ const workspaceTuiPath = resolve(
 	"pi-tui",
 	"dist",
 	"tui.js",
+);
+const workspaceEditorPath = resolve(
+	workspaceRoot,
+	"@mariozechner",
+	"pi-tui",
+	"dist",
+	"components",
+	"editor.js",
+);
+const workspaceInteractiveThemePath = resolve(
+	workspaceRoot,
+	"@mariozechner",
+	"pi-coding-agent",
+	"dist",
+	"modes",
+	"interactive",
+	"theme",
+	"theme.js",
 );
 const workspaceExtensionLoaderPath = resolve(
 	workspaceRoot,
@@ -735,168 +753,28 @@ for (const entryPath of [tuiPath, workspaceTuiPath].filter(Boolean)) {
 	}
 }
 
-if (interactiveThemePath && existsSync(interactiveThemePath)) {
-	let themeSource = readFileSync(interactiveThemePath, "utf8");
-	const desiredGetEditorTheme = [
-		"export function getEditorTheme() {",
-		"    return {",
-		'        borderColor: (text) => " ".repeat(text.length),',
-		'        bgColor: (text) => theme.bg("userMessageBg", text),',
-		'        placeholderText: "Type your message or /help for commands",',
-		'        placeholder: (text) => theme.fg("dim", text),',
-		"        selectList: getSelectListTheme(),",
-		"    };",
-		"}",
-	].join("\n");
-	themeSource = themeSource.replace(
-		/export function getEditorTheme\(\) \{[\s\S]*?\n\}\nexport function getSettingsListTheme\(\) \{/m,
-		`${desiredGetEditorTheme}\nexport function getSettingsListTheme() {`,
-	);
-	writeFileSync(interactiveThemePath, themeSource, "utf8");
+for (const entryPath of [interactiveThemePath, workspaceInteractiveThemePath].filter(Boolean)) {
+	if (!existsSync(entryPath)) {
+		continue;
+	}
+
+	const source = readFileSync(entryPath, "utf8");
+	const patched = patchPiInteractiveThemeSource(source);
+	if (patched !== source) {
+		writeFileSync(entryPath, patched, "utf8");
+	}
 }
 
-if (editorPath && existsSync(editorPath)) {
-	let editorSource = readFileSync(editorPath, "utf8");
-	const importOriginal =
-		'import { getSegmenter, isPunctuationChar, isWhitespaceChar, truncateToWidth, visibleWidth } from "../utils.js";';
-	const importReplacement =
-		'import { applyBackgroundToLine, getSegmenter, isPunctuationChar, isWhitespaceChar, truncateToWidth, visibleWidth } from "../utils.js";';
-	if (editorSource.includes(importOriginal)) {
-		editorSource = editorSource.replace(importOriginal, importReplacement);
+for (const entryPath of [editorPath, workspaceEditorPath].filter(Boolean)) {
+	if (!existsSync(entryPath)) {
+		continue;
 	}
-	const desiredRender = [
-		"    render(width) {",
-		"        const maxPadding = Math.max(0, Math.floor((width - 1) / 2));",
-		"        const paddingX = Math.min(this.paddingX, maxPadding);",
-		"        const contentWidth = Math.max(1, width - paddingX * 2);",
-		"        // Layout width: with padding the cursor can overflow into it,",
-		"        // without padding we reserve 1 column for the cursor.",
-		"        const layoutWidth = Math.max(1, contentWidth - (paddingX ? 0 : 1));",
-		"        // Store for cursor navigation (must match wrapping width)",
-		"        this.lastWidth = layoutWidth;",
-		'        const horizontal = this.borderColor("─");',
-		"        const bgColor = this.theme.bgColor;",
-		"        // Layout the text",
-		"        const layoutLines = this.layoutText(layoutWidth);",
-		"        // Calculate max visible lines: 30% of terminal height, minimum 5 lines",
-		"        const terminalRows = this.tui.terminal.rows;",
-		"        const maxVisibleLines = Math.max(5, Math.floor(terminalRows * 0.3));",
-		"        // Find the cursor line index in layoutLines",
-		"        let cursorLineIndex = layoutLines.findIndex((line) => line.hasCursor);",
-		"        if (cursorLineIndex === -1)",
-		"            cursorLineIndex = 0;",
-		"        // Adjust scroll offset to keep cursor visible",
-		"        if (cursorLineIndex < this.scrollOffset) {",
-		"            this.scrollOffset = cursorLineIndex;",
-		"        }",
-		"        else if (cursorLineIndex >= this.scrollOffset + maxVisibleLines) {",
-		"            this.scrollOffset = cursorLineIndex - maxVisibleLines + 1;",
-		"        }",
-		"        // Clamp scroll offset to valid range",
-		"        const maxScrollOffset = Math.max(0, layoutLines.length - maxVisibleLines);",
-		"        this.scrollOffset = Math.max(0, Math.min(this.scrollOffset, maxScrollOffset));",
-		"        // Get visible lines slice",
-		"        const visibleLines = layoutLines.slice(this.scrollOffset, this.scrollOffset + maxVisibleLines);",
-		"        const result = [];",
-		'        const leftPadding = " ".repeat(paddingX);',
-		"        const rightPadding = leftPadding;",
-		"        const renderBorderLine = (indicator) => {",
-		"            const remaining = width - visibleWidth(indicator);",
-		"            if (remaining >= 0) {",
-		'                return this.borderColor(indicator + "─".repeat(remaining));',
-		"            }",
-		"            return this.borderColor(truncateToWidth(indicator, width));",
-		"        };",
-		"        // Render top padding row. When background fill is active, mimic the user-message block",
-		"        // instead of the stock editor chrome.",
-		"        if (bgColor) {",
-		"            if (this.scrollOffset > 0) {",
-		"                const indicator = `  ↑ ${this.scrollOffset} more`;",
-		"                result.push(applyBackgroundToLine(indicator, width, bgColor));",
-		"            }",
-		"            else {",
-		'                result.push(applyBackgroundToLine("", width, bgColor));',
-		"            }",
-		"        }",
-		"        else if (this.scrollOffset > 0) {",
-		"            const indicator = `─── ↑ ${this.scrollOffset} more `;",
-		"            result.push(renderBorderLine(indicator));",
-		"        }",
-		"        else {",
-		"            result.push(horizontal.repeat(width));",
-		"        }",
-		"        // Render each visible layout line",
-		"        // Emit hardware cursor marker only when focused and not showing autocomplete",
-		"        const emitCursorMarker = this.focused && !this.autocompleteState;",
-		"        const showPlaceholder = this.state.lines.length === 1 &&",
-		'            this.state.lines[0] === "" &&',
-		'            typeof this.theme.placeholderText === "string" &&',
-		"            this.theme.placeholderText.length > 0;",
-		"        for (let visibleIndex = 0; visibleIndex < visibleLines.length; visibleIndex++) {",
-		"            const layoutLine = visibleLines[visibleIndex];",
-		"            const isFirstLayoutLine = this.scrollOffset + visibleIndex === 0;",
-		"            let displayText = layoutLine.text;",
-		"            let lineVisibleWidth = visibleWidth(layoutLine.text);",
-		"            const isPlaceholderLine = showPlaceholder && isFirstLayoutLine;",
-		"            if (isPlaceholderLine) {",
-		"                const marker = emitCursorMarker ? CURSOR_MARKER : \"\";",
-		"                const rawPlaceholder = this.theme.placeholderText;",
-		'                const styledPlaceholder = typeof this.theme.placeholder === "function"',
-		"                    ? this.theme.placeholder(rawPlaceholder)",
-		"                    : rawPlaceholder;",
-		"                displayText = marker + styledPlaceholder;",
-		"                lineVisibleWidth = visibleWidth(rawPlaceholder);",
-		"            }",
-		"            else if (layoutLine.hasCursor && layoutLine.cursorPos !== undefined) {",
-		'                const marker = emitCursorMarker ? CURSOR_MARKER : "";',
-		"                const before = displayText.slice(0, layoutLine.cursorPos);",
-		"                const after = displayText.slice(layoutLine.cursorPos);",
-		"                displayText = before + marker + after;",
-		"            }",
-		"            // Calculate padding based on actual visible width",
-		'            const padding = " ".repeat(Math.max(0, contentWidth - lineVisibleWidth));',
-		"            const renderedLine = `${leftPadding}${displayText}${padding}${rightPadding}`;",
-		"            result.push(bgColor ? applyBackgroundToLine(renderedLine, width, bgColor) : renderedLine);",
-		"        }",
-		"        // Render bottom padding row. When background fill is active, mimic the user-message block",
-		"        // instead of the stock editor chrome.",
-		"        const linesBelow = layoutLines.length - (this.scrollOffset + visibleLines.length);",
-		"        if (bgColor) {",
-		"            if (linesBelow > 0) {",
-		"                const indicator = `  ↓ ${linesBelow} more`;",
-		"                result.push(applyBackgroundToLine(indicator, width, bgColor));",
-		"            }",
-		"            else {",
-		'                result.push(applyBackgroundToLine("", width, bgColor));',
-		"            }",
-		"        }",
-		"        else if (linesBelow > 0) {",
-		"            const indicator = `─── ↓ ${linesBelow} more `;",
-		"            const bottomLine = renderBorderLine(indicator);",
-		"            result.push(bottomLine);",
-		"        }",
-		"        else {",
-		"            const bottomLine = horizontal.repeat(width);",
-		"            result.push(bottomLine);",
-		"        }",
-		"        // Add autocomplete list if active",
-		"        if (this.autocompleteState && this.autocompleteList) {",
-		"            const autocompleteResult = this.autocompleteList.render(contentWidth);",
-		"            for (const line of autocompleteResult) {",
-		"                const lineWidth = visibleWidth(line);",
-		'                const linePadding = " ".repeat(Math.max(0, contentWidth - lineWidth));',
-		"                const autocompleteLine = `${leftPadding}${line}${linePadding}${rightPadding}`;",
-		"                result.push(bgColor ? applyBackgroundToLine(autocompleteLine, width, bgColor) : autocompleteLine);",
-		"            }",
-		"        }",
-		"        return result;",
-		"    }",
-	].join("\n");
-	editorSource = editorSource.replace(
-		/    render\(width\) \{[\s\S]*?\n    handleInput\(data\) \{/m,
-		`${desiredRender}\n    handleInput(data) {`,
-	);
-	writeFileSync(editorPath, editorSource, "utf8");
+
+	const source = readFileSync(entryPath, "utf8");
+	const patched = patchPiEditorSource(source);
+	if (patched !== source) {
+		writeFileSync(entryPath, patched, "utf8");
+	}
 }
 
 const piWebAccessRoot = resolve(workspaceRoot, "pi-web-access");

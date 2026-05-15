@@ -5,7 +5,7 @@ import { spawnSync } from "node:child_process";
 
 import { patchPiAgentCoreSource } from "./lib/pi-agent-core-patch.mjs";
 import { patchPiExtensionLoaderSource } from "./lib/pi-extension-loader-patch.mjs";
-import { patchPiTuiSource } from "./lib/pi-tui-patch.mjs";
+import { patchPiEditorSource, patchPiInteractiveThemeSource, patchPiTuiSource } from "./lib/pi-tui-patch.mjs";
 import { PI_WEB_ACCESS_PATCH_TARGETS, patchPiWebAccessSource } from "./lib/pi-web-access-patch.mjs";
 import { PI_SUBAGENTS_PATCH_TARGETS, patchPiSubagentsSource, stripPiSubagentBuiltinModelSource } from "./lib/pi-subagents-patch.mjs";
 import { patchAlphaHubSearchSource } from "./lib/alpha-hub-search-patch.mjs";
@@ -279,17 +279,28 @@ function patchBundledPiAgentCore() {
 
 function patchBundledPiTui() {
 	const tuiPath = resolve(workspaceNodeModulesDir, "@mariozechner", "pi-tui", "dist", "tui.js");
-	if (!existsSync(tuiPath)) {
-		return false;
+	const editorPath = resolve(workspaceNodeModulesDir, "@mariozechner", "pi-tui", "dist", "components", "editor.js");
+	let changed = false;
+
+	if (existsSync(tuiPath)) {
+		const source = readFileSync(tuiPath, "utf8");
+		const patched = patchPiTuiSource(source);
+		if (patched !== source) {
+			writeFileSync(tuiPath, patched, "utf8");
+			changed = true;
+		}
 	}
 
-	const source = readFileSync(tuiPath, "utf8");
-	const patched = patchPiTuiSource(source);
-	if (patched === source) {
-		return false;
+	if (existsSync(editorPath)) {
+		const source = readFileSync(editorPath, "utf8");
+		const patched = patchPiEditorSource(source);
+		if (patched !== source) {
+			writeFileSync(editorPath, patched, "utf8");
+			changed = true;
+		}
 	}
-	writeFileSync(tuiPath, patched, "utf8");
-	return true;
+
+	return changed;
 }
 
 function patchBundledPiExtensionLoader() {
@@ -312,6 +323,30 @@ function patchBundledPiExtensionLoader() {
 		return false;
 	}
 	writeFileSync(loaderPath, patched, "utf8");
+	return true;
+}
+
+function patchBundledPiInteractiveTheme() {
+	const themePath = resolve(
+		workspaceNodeModulesDir,
+		"@mariozechner",
+		"pi-coding-agent",
+		"dist",
+		"modes",
+		"interactive",
+		"theme",
+		"theme.js",
+	);
+	if (!existsSync(themePath)) {
+		return false;
+	}
+
+	const source = readFileSync(themePath, "utf8");
+	const patched = patchPiInteractiveThemeSource(source);
+	if (patched === source) {
+		return false;
+	}
+	writeFileSync(themePath, patched, "utf8");
 	return true;
 }
 
@@ -376,6 +411,7 @@ if (workspaceIsCurrent(packageSpecs)) {
 	if (
 		patchBundledPiAgentCore() ||
 		patchBundledPiExtensionLoader() ||
+		patchBundledPiInteractiveTheme() ||
 		patchBundledPiTui() ||
 		patchBundledPiWebAccess() ||
 		patchBundledPiSubagents() ||
@@ -398,6 +434,7 @@ prepareWorkspace(packageSpecs);
 pruneWorkspace();
 patchBundledPiAgentCore();
 patchBundledPiExtensionLoader();
+patchBundledPiInteractiveTheme();
 patchBundledPiTui();
 patchBundledPiWebAccess();
 patchBundledPiSubagents();

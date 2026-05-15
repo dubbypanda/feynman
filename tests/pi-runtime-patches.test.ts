@@ -83,14 +83,46 @@ const TUI_SOURCE = `
         }
 `;
 
+const EDITOR_SOURCE = `
+import { getSegmenter, isPunctuationChar, isWhitespaceChar, truncateToWidth, visibleWidth } from "../utils.js";
+
+export class Editor {
+    render(width) {
+        const layoutLines = this.layoutText(width);
+        return layoutLines.map((line) => line.text);
+    }
+    handleInput(data) {
+        return data;
+    }
+}
+`;
+
+const THEME_SOURCE = `
+export function getEditorTheme() {
+    return {
+        borderColor: (text) => theme.fg("borderMuted", text),
+        selectList: getSelectListTheme(),
+    };
+}
+export function getSettingsListTheme() {
+    return {};
+}
+`;
+
 test("patchPiRuntimeNodeModules patches installed Pi runtime files", async () => {
 	const appRoot = mkdtempSync(join(tmpdir(), "feynman-runtime-patches-"));
 	const agentLoopPath = join(appRoot, "node_modules", "@mariozechner", "pi-agent-core", "dist", "agent-loop.js");
 	const tuiPath = join(appRoot, "node_modules", "@mariozechner", "pi-tui", "dist", "tui.js");
+	const editorPath = join(appRoot, "node_modules", "@mariozechner", "pi-tui", "dist", "components", "editor.js");
+	const themePath = join(appRoot, "node_modules", "@mariozechner", "pi-coding-agent", "dist", "modes", "interactive", "theme", "theme.js");
 	await mkdir(dirname(agentLoopPath), { recursive: true });
 	await mkdir(dirname(tuiPath), { recursive: true });
+	await mkdir(dirname(editorPath), { recursive: true });
+	await mkdir(dirname(themePath), { recursive: true });
 	writeFileSync(agentLoopPath, SOURCE, "utf8");
 	writeFileSync(tuiPath, TUI_SOURCE, "utf8");
+	writeFileSync(editorPath, EDITOR_SOURCE, "utf8");
+	writeFileSync(themePath, THEME_SOURCE, "utf8");
 
 	assert.equal(patchPiRuntimeNodeModules(appRoot), true);
 
@@ -103,6 +135,8 @@ test("patchPiRuntimeNodeModules patches installed Pi runtime files", async () =>
 	const patchedTui = readFileSync(tuiPath, "utf8");
 	assert.match(patchedTui, /line = sliceByColumn\(line, 0, width, true\)/);
 	assert.doesNotMatch(patchedTui, /throw new Error\(errorMsg\)/);
+	assert.match(readFileSync(editorPath, "utf8"), /displayText = styleInput\(before\) \+ marker \+ styleInput\(after\)/);
+	assert.match(readFileSync(themePath, "utf8"), /input: \(text\) => theme\.fg\("text", text\)/);
 	assert.equal(patchPiRuntimeNodeModules(appRoot), false);
 });
 
@@ -110,15 +144,23 @@ test("patchPiRuntimeNodeModules patches the vendored runtime workspace", async (
 	const appRoot = mkdtempSync(join(tmpdir(), "feynman-workspace-runtime-patches-"));
 	const agentLoopPath = join(appRoot, ".feynman", "npm", "node_modules", "@mariozechner", "pi-agent-core", "dist", "agent-loop.js");
 	const tuiPath = join(appRoot, ".feynman", "npm", "node_modules", "@mariozechner", "pi-tui", "dist", "tui.js");
+	const editorPath = join(appRoot, ".feynman", "npm", "node_modules", "@mariozechner", "pi-tui", "dist", "components", "editor.js");
+	const themePath = join(appRoot, ".feynman", "npm", "node_modules", "@mariozechner", "pi-coding-agent", "dist", "modes", "interactive", "theme", "theme.js");
 	await mkdir(dirname(agentLoopPath), { recursive: true });
 	await mkdir(dirname(tuiPath), { recursive: true });
+	await mkdir(dirname(editorPath), { recursive: true });
+	await mkdir(dirname(themePath), { recursive: true });
 	writeFileSync(agentLoopPath, SOURCE, "utf8");
 	writeFileSync(tuiPath, TUI_SOURCE, "utf8");
+	writeFileSync(editorPath, EDITOR_SOURCE, "utf8");
+	writeFileSync(themePath, THEME_SOURCE, "utf8");
 
 	assert.equal(patchPiRuntimeNodeModules(appRoot), true);
 
 	assert.match(readFileSync(agentLoopPath, "utf8"), /function normalizeFeynmanToolAlias/);
 	assert.match(readFileSync(tuiPath, "utf8"), /line = sliceByColumn\(line, 0, width, true\)/);
+	assert.match(readFileSync(editorPath, "utf8"), /displayText = styleInput\(before\) \+ marker \+ styleInput\(after\)/);
+	assert.match(readFileSync(themePath, "utf8"), /input: \(text\) => theme\.fg\("text", text\)/);
 	assert.equal(patchPiRuntimeNodeModules(appRoot), false);
 });
 

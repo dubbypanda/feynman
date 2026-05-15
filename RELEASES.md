@@ -4,6 +4,17 @@ This file is the public release history for Feynman. Keep entries user-facing: w
 
 GitHub release notes are generated from the matching `## vX.Y.Z` section in this file.
 
+## v0.2.57 - 2026-05-15
+
+### Runtime Reliability
+
+- Fixed the interactive prompt input color on macOS/iTerm profiles where typed text inherited a black terminal foreground against Feynman's dark editor background.
+- Applied the editor foreground/background patch through the shared Pi patch module so package-local installs and the vendored runtime archive stay in sync.
+
+### Validation
+
+- Added regression coverage for the patched Pi editor/theme source transformations, including idempotency.
+
 ## v0.2.56 - 2026-05-13
 
 ### Security

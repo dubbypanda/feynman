@@ -35,6 +35,157 @@ const OVERFLOW_TRUNCATE_BLOCK = `            let line = newLines[i];
             }
             buffer += line;`;
 
+const EDITOR_IMPORT_ORIGINAL =
+	'import { getSegmenter, isPunctuationChar, isWhitespaceChar, truncateToWidth, visibleWidth } from "../utils.js";';
+const EDITOR_IMPORT_REPLACEMENT =
+	'import { applyBackgroundToLine, getSegmenter, isPunctuationChar, isWhitespaceChar, truncateToWidth, visibleWidth } from "../utils.js";';
+
+const EDITOR_RENDER_BLOCK = [
+	"    render(width) {",
+	"        const maxPadding = Math.max(0, Math.floor((width - 1) / 2));",
+	"        const paddingX = Math.min(this.paddingX, maxPadding);",
+	"        const contentWidth = Math.max(1, width - paddingX * 2);",
+	"        // Layout width: with padding the cursor can overflow into it,",
+	"        // without padding we reserve 1 column for the cursor.",
+	"        const layoutWidth = Math.max(1, contentWidth - (paddingX ? 0 : 1));",
+	"        // Store for cursor navigation (must match wrapping width)",
+	"        this.lastWidth = layoutWidth;",
+	'        const horizontal = this.borderColor("─");',
+	"        const bgColor = this.theme.bgColor;",
+	"        // Layout the text",
+	"        const layoutLines = this.layoutText(layoutWidth);",
+	"        // Calculate max visible lines: 30% of terminal height, minimum 5 lines",
+	"        const terminalRows = this.tui.terminal.rows;",
+	"        const maxVisibleLines = Math.max(5, Math.floor(terminalRows * 0.3));",
+	"        // Find the cursor line index in layoutLines",
+	"        let cursorLineIndex = layoutLines.findIndex((line) => line.hasCursor);",
+	"        if (cursorLineIndex === -1)",
+	"            cursorLineIndex = 0;",
+	"        // Adjust scroll offset to keep cursor visible",
+	"        if (cursorLineIndex < this.scrollOffset) {",
+	"            this.scrollOffset = cursorLineIndex;",
+	"        }",
+	"        else if (cursorLineIndex >= this.scrollOffset + maxVisibleLines) {",
+	"            this.scrollOffset = cursorLineIndex - maxVisibleLines + 1;",
+	"        }",
+	"        // Clamp scroll offset to valid range",
+	"        const maxScrollOffset = Math.max(0, layoutLines.length - maxVisibleLines);",
+	"        this.scrollOffset = Math.max(0, Math.min(this.scrollOffset, maxScrollOffset));",
+	"        // Get visible lines slice",
+	"        const visibleLines = layoutLines.slice(this.scrollOffset, this.scrollOffset + maxVisibleLines);",
+	"        const result = [];",
+	'        const leftPadding = " ".repeat(paddingX);',
+	"        const rightPadding = leftPadding;",
+	"        const renderBorderLine = (indicator) => {",
+	"            const remaining = width - visibleWidth(indicator);",
+	"            if (remaining >= 0) {",
+	'                return this.borderColor(indicator + "─".repeat(remaining));',
+	"            }",
+	"            return this.borderColor(truncateToWidth(indicator, width));",
+	"        };",
+	"        // Render top padding row. When background fill is active, mimic the user-message block",
+	"        // instead of the stock editor chrome.",
+	"        if (bgColor) {",
+	"            if (this.scrollOffset > 0) {",
+	"                const indicator = `  ↑ ${this.scrollOffset} more`;",
+	"                result.push(applyBackgroundToLine(indicator, width, bgColor));",
+	"            }",
+	"            else {",
+	'                result.push(applyBackgroundToLine("", width, bgColor));',
+	"            }",
+	"        }",
+	"        else if (this.scrollOffset > 0) {",
+	"            const indicator = `─── ↑ ${this.scrollOffset} more `;",
+	"            result.push(renderBorderLine(indicator));",
+	"        }",
+	"        else {",
+	"            result.push(horizontal.repeat(width));",
+	"        }",
+	"        // Render each visible layout line",
+	"        // Emit hardware cursor marker only when focused and not showing autocomplete",
+	"        const emitCursorMarker = this.focused && !this.autocompleteState;",
+	"        const showPlaceholder = this.state.lines.length === 1 &&",
+	'            this.state.lines[0] === "" &&',
+	'            typeof this.theme.placeholderText === "string" &&',
+	"            this.theme.placeholderText.length > 0;",
+	"        const styleInput = typeof this.theme.input === \"function\" ? this.theme.input : (text) => text;",
+	"        for (let visibleIndex = 0; visibleIndex < visibleLines.length; visibleIndex++) {",
+	"            const layoutLine = visibleLines[visibleIndex];",
+	"            const isFirstLayoutLine = this.scrollOffset + visibleIndex === 0;",
+	"            let displayText = layoutLine.text;",
+	"            let lineVisibleWidth = visibleWidth(layoutLine.text);",
+	"            const isPlaceholderLine = showPlaceholder && isFirstLayoutLine;",
+	"            if (isPlaceholderLine) {",
+	"                const marker = emitCursorMarker ? CURSOR_MARKER : \"\";",
+	"                const rawPlaceholder = this.theme.placeholderText;",
+	'                const styledPlaceholder = typeof this.theme.placeholder === "function"',
+	"                    ? this.theme.placeholder(rawPlaceholder)",
+	"                    : rawPlaceholder;",
+	"                displayText = marker + styledPlaceholder;",
+	"                lineVisibleWidth = visibleWidth(rawPlaceholder);",
+	"            }",
+	"            else if (layoutLine.hasCursor && layoutLine.cursorPos !== undefined) {",
+	'                const marker = emitCursorMarker ? CURSOR_MARKER : "";',
+	"                const before = displayText.slice(0, layoutLine.cursorPos);",
+	"                const after = displayText.slice(layoutLine.cursorPos);",
+	"                displayText = styleInput(before) + marker + styleInput(after);",
+	"            }",
+	"            else {",
+	"                displayText = styleInput(displayText);",
+	"            }",
+	"            // Calculate padding based on actual visible width",
+	'            const padding = " ".repeat(Math.max(0, contentWidth - lineVisibleWidth));',
+	"            const renderedLine = `${leftPadding}${displayText}${padding}${rightPadding}`;",
+	"            result.push(bgColor ? applyBackgroundToLine(renderedLine, width, bgColor) : renderedLine);",
+	"        }",
+	"        // Render bottom padding row. When background fill is active, mimic the user-message block",
+	"        // instead of the stock editor chrome.",
+	"        const linesBelow = layoutLines.length - (this.scrollOffset + visibleLines.length);",
+	"        if (bgColor) {",
+	"            if (linesBelow > 0) {",
+	"                const indicator = `  ↓ ${linesBelow} more`;",
+	"                result.push(applyBackgroundToLine(indicator, width, bgColor));",
+	"            }",
+	"            else {",
+	'                result.push(applyBackgroundToLine("", width, bgColor));',
+	"            }",
+	"        }",
+	"        else if (linesBelow > 0) {",
+	"            const indicator = `─── ↓ ${linesBelow} more `;",
+	"            const bottomLine = renderBorderLine(indicator);",
+	"            result.push(bottomLine);",
+	"        }",
+	"        else {",
+	"            const bottomLine = horizontal.repeat(width);",
+	"            result.push(bottomLine);",
+	"        }",
+	"        // Add autocomplete list if active",
+	"        if (this.autocompleteState && this.autocompleteList) {",
+	"            const autocompleteResult = this.autocompleteList.render(contentWidth);",
+	"            for (const line of autocompleteResult) {",
+	"                const lineWidth = visibleWidth(line);",
+	'                const linePadding = " ".repeat(Math.max(0, contentWidth - lineWidth));',
+	"                const autocompleteLine = `${leftPadding}${line}${linePadding}${rightPadding}`;",
+	"                result.push(bgColor ? applyBackgroundToLine(autocompleteLine, width, bgColor) : autocompleteLine);",
+	"            }",
+	"        }",
+	"        return result;",
+	"    }",
+].join("\n");
+
+const EDITOR_THEME_BLOCK = [
+	"export function getEditorTheme() {",
+	"    return {",
+	'        borderColor: (text) => " ".repeat(text.length),',
+	'        bgColor: (text) => theme.bg("userMessageBg", text),',
+	'        input: (text) => theme.fg("text", text),',
+	'        placeholderText: "Type your message or /help for commands",',
+	'        placeholder: (text) => theme.fg("dim", text),',
+	"        selectList: getSelectListTheme(),",
+	"    };",
+	"}",
+].join("\n");
+
 export function patchPiTuiSource(source) {
 	if (source.includes("line = sliceByColumn(line, 0, width, true);")) {
 		return source;
@@ -43,4 +194,31 @@ export function patchPiTuiSource(source) {
 		return source;
 	}
 	return source.replace(OVERFLOW_THROW_BLOCK, OVERFLOW_TRUNCATE_BLOCK);
+}
+
+export function patchPiEditorSource(source) {
+	let patched = source;
+	if (patched.includes(EDITOR_IMPORT_ORIGINAL)) {
+		patched = patched.replace(EDITOR_IMPORT_ORIGINAL, EDITOR_IMPORT_REPLACEMENT);
+	}
+	if (patched.includes("const styleInput = typeof this.theme.input")) {
+		return patched;
+	}
+	return patched.replace(
+		/    render\(width\) \{[\s\S]*?\n    handleInput\(data\) \{/m,
+		`${EDITOR_RENDER_BLOCK}\n    handleInput(data) {`,
+	);
+}
+
+export function patchPiInteractiveThemeSource(source) {
+	if (
+		source.includes('bgColor: (text) => theme.bg("userMessageBg", text),') &&
+		source.includes('input: (text) => theme.fg("text", text),')
+	) {
+		return source;
+	}
+	return source.replace(
+		/export function getEditorTheme\(\) \{[\s\S]*?\n\}\nexport function getSettingsListTheme\(\) \{/m,
+		`${EDITOR_THEME_BLOCK}\nexport function getSettingsListTheme() {`,
+	);
 }
