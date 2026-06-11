@@ -29,6 +29,8 @@ jobs:
           - os: ubuntu-latest
             node: 25
     runs-on: ${{ matrix.os }}
+    env:
+      HAS_OPENAI_KEY: ${{ secrets.OPENAI_API_KEY != '' }}
     defaults:
       run:
         shell: bash
@@ -101,7 +103,7 @@ jobs:
           '
 
       - name: Configure model auth for live smokes
-        if: ${{ secrets.OPENAI_API_KEY != '' }}
+        if: env.HAS_OPENAI_KEY == 'true'
         env:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
         run: |
