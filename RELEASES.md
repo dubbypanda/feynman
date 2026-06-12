@@ -4,6 +4,16 @@ This file is the public release history for Feynman. Keep entries user-facing: w
 
 GitHub release notes are generated from the matching `## vX.Y.Z` section in this file.
 
+## v0.3.3 - 2026-06-12
+
+### Windows
+
+- Fixed the remaining Windows subagent launch failure where Pi loaded `pi-subagents` from its own `<agentDir>/npm/node_modules` package root. The 0.3.2 fix patched Feynman's bundled workspace and npm-global copy, but Pi 0.79 can self-install configured packages under the active agent directory after `FEYNMAN_HOME` is set; that fresh copy was still unpatched and could spawn Feynman's wrapper with `--mode` in the main-module slot.
+
+### Validation
+
+- Added regression coverage for both Feynman's user npm-global package root and Pi's agent-local npm package root, so launch-time patching now checks the exact Windows copy that failed in e2e run `27392984208`.
+
 ## v0.3.2 - 2026-06-11
 
 ### Subagents

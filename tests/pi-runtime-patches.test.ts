@@ -237,6 +237,48 @@ test("patchPiRuntimeNodeModules patches the vendored runtime workspace", async (
 	assert.equal(patchPiRuntimeNodeModules(appRoot), false);
 });
 
+test("patchPiRuntimeNodeModules patches Feynman user and Pi agent package roots", async () => {
+	const appRoot = mkdtempSync(join(tmpdir(), "feynman-user-runtime-patches-"));
+	const homeRoot = mkdtempSync(join(tmpdir(), "feynman-user-runtime-home-"));
+	const agentDir = join(homeRoot, ".feynman", "agent");
+	const globalSpawnPath = join(
+		homeRoot,
+		".feynman",
+		"npm-global",
+		"lib",
+		"node_modules",
+		"pi-subagents",
+		"src",
+		"runs",
+		"shared",
+		"pi-spawn.ts",
+	);
+	const agentSpawnPath = join(
+		agentDir,
+		"npm",
+		"node_modules",
+		"pi-subagents",
+		"src",
+		"runs",
+		"shared",
+		"pi-spawn.ts",
+	);
+	await mkdir(dirname(globalSpawnPath), { recursive: true });
+	await mkdir(dirname(agentSpawnPath), { recursive: true });
+	writeFileSync(globalSpawnPath, SUBAGENT_PI_SPAWN_SOURCE, "utf8");
+	writeFileSync(agentSpawnPath, SUBAGENT_PI_SPAWN_SOURCE, "utf8");
+
+	assert.equal(patchPiRuntimeNodeModules(appRoot, agentDir), true);
+
+	for (const spawnPath of [globalSpawnPath, agentSpawnPath]) {
+		const source = readFileSync(spawnPath, "utf8");
+		assert.match(source, /process\.env\.FEYNMAN_PI_CLI_PATH/);
+		assert.match(source, /\targv2\?: string;/);
+		assert.match(source, /wrapperPiCliPath/);
+	}
+	assert.equal(patchPiRuntimeNodeModules(appRoot, agentDir), false);
+});
+
 test("patchPiRuntimeNodeModules is a no-op when Pi agent-core is absent", () => {
 	const appRoot = mkdtempSync(join(tmpdir(), "feynman-runtime-patches-missing-"));
 

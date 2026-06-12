@@ -4,6 +4,15 @@ Workspace lab notebook for long-running or resumable research work.
 
 Use this file to track chronology, not release notes. Keep entries short, factual, and operational.
 
+### 2026-06-12 — windows-agent-npm-subagent-root
+
+- Objective: Make the Windows subagent spawn work from the published package and prove it with the multi-OS e2e workflow.
+- Changed: Added regression coverage for launch-time pi-subagents patching in both the Feynman npm-global package root and Pi's `<agentDir>/npm/node_modules` package root; bumped the package to `0.3.3` for a release containing the already-committed `<agentDir>/npm/node_modules` runtime patch.
+- Verified: Run `27392984208` failed only on Windows live subagent smoke; its instrumentation showed `D:\a\_temp\feynman-home\.feynman\agent\npm\node_modules\pi-subagents` existed with `patched(wrapperPiCliPath): false`, while the failure still imported `D:\a\feynman\feynman\--mode` through Feynman's wrapper. Focused local patch tests, `npm test` (198/198), `npm run typecheck`, `npm run build`, `node bin/feynman.js --version`, and a local live subagent smoke returning `RESULT=PONG` passed.
+- Failed / learned: The 0.3.2 fix covered the npm-global copy but not Pi 0.79's own agent-local package install root after `FEYNMAN_HOME` is set.
+- Blockers: Need publish confirmation, e2e green on all six jobs, diagnostics cleanup, and a final green e2e run.
+- Next: Push `0.3.3`, verify npm latest, and dispatch e2e.
+
 ## Entry template
 
 ### YYYY-MM-DD HH:MM TZ — [slug or objective]
