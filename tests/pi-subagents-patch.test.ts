@@ -3,6 +3,13 @@ import assert from "node:assert/strict";
 
 import { PI_SUBAGENTS_PATCH_TARGETS, patchPiSubagentsSource, stripPiSubagentBuiltinModelSource } from "../scripts/lib/pi-subagents-patch.mjs";
 
+function assertUserDirLoadsHaveDeclaration(source: string): void {
+	for (const chunk of source.split(/\n(?=export function |function )/)) {
+		if (!/load(?:Agents|Chains)FromDir\(userDir, "user"\)/.test(chunk)) continue;
+		assert.match(chunk, /\bconst userDir\b/);
+	}
+}
+
 const CASES = [
 	{
 		name: "index.ts config path",
@@ -134,7 +141,7 @@ test("patchPiSubagentsSource is idempotent", () => {
 	assert.equal(twice, once);
 });
 
-test("patchPiSubagentsSource rewrites modern agents.ts discovery paths", () => {
+test("patchPiSubagentsSource rewrites old agents.ts discovery paths transactionally", () => {
 	const input = [
 		'import * as fs from "node:fs";',
 		'import * as os from "node:os";',
@@ -167,9 +174,72 @@ test("patchPiSubagentsSource rewrites modern agents.ts discovery paths", () => {
 	assert.match(patched, /function resolvePiAgentDir\(\): string \{/);
 	assert.match(patched, /const userDir = path\.join\(resolvePiAgentDir\(\), "agents"\);/);
 	assert.match(patched, /const userAgents = scope === "project" \? \[\] : loadAgentsFromDir\(userDir, "user"\);/);
+	assert.equal((patched.match(/\bconst userDir\b/g) ?? []).length, 2);
+	assertUserDirLoadsHaveDeclaration(patched);
 	assert.ok(!patched.includes('loadAgentsFromDir(userDirOld, "user")'));
 	assert.ok(!patched.includes('loadChainsFromDir(userDirNew, "user")'));
 	assert.ok(!patched.includes('fs.existsSync(userDirNew) ? userDirNew : userDirOld'));
+});
+
+test("patchPiSubagentsSource leaves current getAgentDir agents.ts discovery paths native", () => {
+	const input = [
+		'import * as fs from "node:fs";',
+		'import * as os from "node:os";',
+		'import * as path from "node:path";',
+		'import { getAgentDir } from "../shared/utils.ts";',
+		'export function discoverAgents(cwd: string, scope: AgentScope): AgentDiscoveryResult {',
+		'\tconst userDirOld = path.join(getAgentDir(), "agents");',
+		'\tconst userDirNew = path.join(os.homedir(), ".agents");',
+		'\tconst userAgentsOld = scope === "project" ? [] : loadAgentsFromDir(userDirOld, "user");',
+		'\tconst userAgentsNew = scope === "project" ? [] : loadAgentsFromDir(userDirNew, "user");',
+		'\tconst userAgents = [...userAgentsOld, ...userAgentsNew];',
+		'}',
+		'export function discoverAgentsAll(cwd: string) {',
+		'\tconst userDirOld = path.join(getAgentDir(), "agents");',
+		'\tconst userDirNew = path.join(os.homedir(), ".agents");',
+		'\tconst user = [',
+		'\t\t...loadAgentsFromDir(userDirOld, "user"),',
+		'\t\t...loadAgentsFromDir(userDirNew, "user"),',
+		'\t];',
+		'\tconst userDir = process.env.PI_CODING_AGENT_DIR ? userDirOld : fs.existsSync(userDirNew) ? userDirNew : userDirOld;',
+		'\treturn { userDir };',
+		'}',
+	].join("\n");
+
+	const patched = patchPiSubagentsSource("agents.ts", input);
+
+	assert.equal(patched, input);
+	assert.doesNotMatch(patched, /resolvePiAgentDir/);
+	assertUserDirLoadsHaveDeclaration(patched);
+});
+
+test("patchPiSubagentsSource repairs current half-patched agents.ts userDir loads", () => {
+	const input = [
+		'import * as fs from "node:fs";',
+		'import * as os from "node:os";',
+		'import * as path from "node:path";',
+		'import { getAgentDir } from "../shared/utils.ts";',
+		'export function discoverAgents(cwd: string, scope: AgentScope): AgentDiscoveryResult {',
+		'\tconst userDirOld = path.join(getAgentDir(), "agents");',
+		'\tconst userDirNew = path.join(os.homedir(), ".agents");',
+		'\tconst userAgents = scope === "project" ? [] : loadAgentsFromDir(userDir, "user");',
+		'}',
+		'export function discoverAgentsAll(cwd: string) {',
+		'\tconst userDirOld = path.join(getAgentDir(), "agents");',
+		'\tconst userDirNew = path.join(os.homedir(), ".agents");',
+		'\tconst user = loadAgentsFromDir(userDir, "user");',
+		'\tconst userDir = process.env.PI_CODING_AGENT_DIR ? userDirOld : fs.existsSync(userDirNew) ? userDirNew : userDirOld;',
+		'\treturn { userDir };',
+		'}',
+	].join("\n");
+
+	const patched = patchPiSubagentsSource("src/agents/agents.ts", input);
+
+	assert.match(patched, /const userAgentsOld = scope === "project" \? \[\] : loadAgentsFromDir\(userDirOld, "user"\);/);
+	assert.match(patched, /const userAgentsNew = scope === "project" \? \[\] : loadAgentsFromDir\(userDirNew, "user"\);/);
+	assert.match(patched, /const user = \[\n\t\t\.\.\.loadAgentsFromDir\(userDirOld, "user"\),\n\t\t\.\.\.loadAgentsFromDir\(userDirNew, "user"\),\n\t\];/);
+	assert.doesNotMatch(patched, /resolvePiAgentDir/);
+	assertUserDirLoadsHaveDeclaration(patched);
 });
 
 test("patchPiSubagentsSource preserves output on top-level parallel tasks", () => {
@@ -204,6 +274,14 @@ test("patchPiSubagentsSource preserves output on top-level parallel tasks", () =
 
 test("patchPiSubagentsSource preserves output in async parallel task handoff", () => {
 	const input = [
+		"interface TaskParam {",
+		"\tagent: string;",
+		"\ttask: string;",
+		"\tcwd?: string;",
+		"\tcount?: number;",
+		"\tmodel?: string;",
+		"\tskill?: string | string[] | boolean;",
+		"}",
 		"function run(tasks: TaskParam[]) {",
 		"\tconst modelOverrides = tasks.map(() => undefined);",
 		"\tconst skillOverrides = tasks.map(() => undefined);",
@@ -219,11 +297,20 @@ test("patchPiSubagentsSource preserves output in async parallel task handoff", (
 
 	const patched = patchPiSubagentsSource("subagent-executor.ts", input);
 
+	assert.match(patched, /output\?: string \| false;/);
 	assert.match(patched, /\n\t\toutput: t\.output,/);
 });
 
 test("patchPiSubagentsSource uses task output when resolving foreground parallel behavior", () => {
 	const input = [
+		"interface TaskParam {",
+		"\tagent: string;",
+		"\ttask: string;",
+		"\tcwd?: string;",
+		"\tcount?: number;",
+		"\tmodel?: string;",
+		"\tskill?: string | string[] | boolean;",
+		"}",
 		"async function run(tasks: TaskParam[]) {",
 		"\tconst skillOverrides = tasks.map((t) => normalizeSkillInput(t.skill));",
 		"\tif (params.clarify === true && ctx.hasUI) {",
@@ -237,6 +324,7 @@ test("patchPiSubagentsSource uses task output when resolving foreground parallel
 
 	const patched = patchPiSubagentsSource("subagent-executor.ts", input);
 
+	assert.match(patched, /output\?: string \| false;/);
 	assert.match(patched, /resolveStepBehavior\(c, \{ output: tasks\[i\]\?\.output, skills: skillOverrides\[i\] \}\)/);
 	assert.match(patched, /resolveStepBehavior\(config, \{ output: tasks\[i\]\?\.output, skills: skillOverrides\[i\] \}\)/);
 	assert.doesNotMatch(patched, /resolveStepBehavior\(config, \{\}\)/);
@@ -244,6 +332,14 @@ test("patchPiSubagentsSource uses task output when resolving foreground parallel
 
 test("patchPiSubagentsSource passes foreground parallel output paths into runSync", () => {
 	const input = [
+		"interface TaskParam {",
+		"\tagent: string;",
+		"\ttask: string;",
+		"\tcwd?: string;",
+		"\tcount?: number;",
+		"\tmodel?: string;",
+		"\tskill?: string | string[] | boolean;",
+		"}",
 		"async function runForegroundParallelTasks(input: ForegroundParallelRunInput): Promise<SingleResult[]> {",
 		"\treturn mapConcurrent(input.tasks, input.concurrencyLimit, async (task, index) => {",
 		"\t\tconst overrideSkills = input.skillOverrides[index];",
@@ -261,6 +357,7 @@ test("patchPiSubagentsSource passes foreground parallel output paths into runSyn
 
 	const patched = patchPiSubagentsSource("subagent-executor.ts", input);
 
+	assert.match(patched, /output\?: string \| false;/);
 	assert.match(patched, /const outputPath = typeof input\.behaviors\[index\]\?\.output === "string"/);
 	assert.match(patched, /const taskText = injectSingleOutputInstruction\(input\.taskTexts\[index\]!, outputPath\)/);
 	assert.match(patched, /runSync\(input\.ctx\.cwd, input\.agents, task\.agent, taskText, \{/);
@@ -307,6 +404,10 @@ test("patchPiSubagentsSource documents output in top-level parallel help", () =>
 
 test("patchPiSubagentsSource makes pi-spawn prefer the real Pi CLI over Feynman wrapper", () => {
 	const input = [
+		"export interface PiSpawnDeps {",
+		"\texecPath?: string;",
+		"\targv1?: string;",
+		"}",
 		"export function resolveWindowsPiCliScript(deps: PiSpawnDeps = {}): string | undefined {",
 		"\tconst existsSync = deps.existsSync ?? fs.existsSync;",
 		'\tconst readFileSync = deps.readFileSync ?? ((filePath, encoding) => fs.readFileSync(filePath, encoding));',
@@ -324,6 +425,7 @@ test("patchPiSubagentsSource makes pi-spawn prefer the real Pi CLI over Feynman 
 	const patched = patchPiSubagentsSource("src/runs/shared/pi-spawn.ts", input);
 
 	assert.match(patched, /process\.env\.FEYNMAN_PI_CLI_PATH/);
+	assert.match(patched, /\targv2\?: string;/);
 	assert.match(patched, /path\.basename\(argvPath\) !== "pi-cli-wrapper\.js"/);
 	assert.match(patched, /const argv2 = deps\.argv2 \?\? process\.argv\[2\]/);
 	assert.match(patched, /path\.join\(path\.dirname\(normalizePath\(argv2\)\), "cli\.js"\)/);

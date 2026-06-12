@@ -149,6 +149,11 @@ pi.registerCommand("search", { description: "Browse stored web search results" }
 `;
 
 const SUBAGENT_PI_SPAWN_SOURCE = `
+export interface PiSpawnDeps {
+	execPath?: string;
+	argv1?: string;
+}
+
 export function resolveWindowsPiCliScript(deps: PiSpawnDeps = {}): string | undefined {
 	const existsSync = deps.existsSync ?? fs.existsSync;
 	const argv1 = deps.argv1 ?? process.argv[1];
@@ -227,6 +232,7 @@ test("patchPiRuntimeNodeModules patches the vendored runtime workspace", async (
 	assert.match(readFileSync(webAccessPath, "utf8"), /params\.workflow \?\? configWorkflow \?\? "none"/);
 	assert.match(readFileSync(webAccessPath, "utf8"), /pi\.registerCommand\("web-results"/);
 	assert.match(readFileSync(subagentSpawnPath, "utf8"), /process\.env\.FEYNMAN_PI_CLI_PATH/);
+	assert.match(readFileSync(subagentSpawnPath, "utf8"), /\targv2\?: string;/);
 	assert.match(readFileSync(subagentSpawnPath, "utf8"), /path\.basename\(argvPath\) !== "pi-cli-wrapper\.js"/);
 	assert.equal(patchPiRuntimeNodeModules(appRoot), false);
 });

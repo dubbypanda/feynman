@@ -15,6 +15,15 @@ Use this file to track chronology, not release notes. Keep entries short, factua
 - Blockers: ...
 - Next: ...
 
+### 2026-06-11 19:54 PDT — pi-subagents-userdir
+
+- Objective: Fix the `userDir is not defined` Pi subagent launch failure and make Feynman's pi-subagents patcher fail closed when upstream patch anchors drift.
+- Changed: Made grouped pi-subagents source edits transactional, stopped rewriting the current upstream `getAgentDir()` agents path shape, repaired already half-patched current `agents.ts` inputs, and updated runtime/patch regression fixtures.
+- Verified: `npm test`, `npm run typecheck`, focused patch tests, and live/tarball pi-subagents patch invariant checks passed.
+- Failed / learned: Current upstream `pi-subagents@0.28.0` already honors `PI_CODING_AGENT_DIR`, and Feynman already sets it alongside `FEYNMAN_CODING_AGENT_DIR`; the old agents path rewrite is unnecessary for that shape and caused the mixed-state failure.
+- Blockers: None.
+- Next: Release when ready; do not re-enable current-shape agents path rewrites unless upstream stops honoring `PI_CODING_AGENT_DIR`.
+
 ### 2026-05-16 17:43 PDT — hindsight-memory-preset
 
 - Objective: Address issue `#166` by making Hindsight memory installable through Feynman's optional package preset system.

@@ -126,6 +126,97 @@ function replaceAll(source, from, to) {
 	return source.split(from).join(to);
 }
 
+function applyReplacementGroup(source, replacements, anchors = []) {
+	if (![...anchors, ...replacements.map(([from]) => from)].every((anchor) => source.includes(anchor))) {
+		return source;
+	}
+
+	let patched = source;
+	for (const [from, to] of replacements) {
+		patched = replaceAll(patched, from, to);
+	}
+	return patched;
+}
+
+function applyReplacementGroups(source, groups) {
+	let patched = source;
+	for (const group of groups) {
+		patched = applyReplacementGroup(patched, group);
+	}
+	return patched;
+}
+
+const OLD_AGENT_DIR_DECLS = [
+	'\tconst userDirOld = path.join(os.homedir(), ".pi", "agent", "agents");',
+	'\tconst userDirNew = path.join(os.homedir(), ".agents");',
+].join("\n");
+
+const CURRENT_AGENT_DIR_DECLS = [
+	'\tconst userDirOld = path.join(getAgentDir(), "agents");',
+	'\tconst userDirNew = path.join(os.homedir(), ".agents");',
+].join("\n");
+
+const DISCOVER_AGENTS_LEGACY_USER_LOADS = [
+	'\tconst userAgentsOld = scope === "project" ? [] : loadAgentsFromDir(userDirOld, "user");',
+	'\tconst userAgentsNew = scope === "project" ? [] : loadAgentsFromDir(userDirNew, "user");',
+	'\tconst userAgents = [...userAgentsOld, ...userAgentsNew];',
+].join("\n");
+
+const DISCOVER_AGENTS_SINGLE_USER_LOAD = '\tconst userAgents = scope === "project" ? [] : loadAgentsFromDir(userDir, "user");';
+
+const DISCOVER_AGENTS_ALL_LEGACY_USER_LOADS = [
+	'\tconst user = [',
+	'\t\t...loadAgentsFromDir(userDirOld, "user"),',
+	'\t\t...loadAgentsFromDir(userDirNew, "user"),',
+	'\t];',
+].join("\n");
+
+const DISCOVER_AGENTS_ALL_SINGLE_USER_LOAD = '\tconst user = loadAgentsFromDir(userDir, "user");';
+
+const DISCOVER_AGENTS_ALL_LEGACY_CHAIN_LOADS = [
+	'\tconst chains = [',
+	'\t\t...loadChainsFromDir(userDirOld, "user"),',
+	'\t\t...loadChainsFromDir(userDirNew, "user"),',
+	'\t\t...(projectDir ? loadChainsFromDir(projectDir, "project") : []),',
+	'\t];',
+].join("\n");
+
+const DISCOVER_AGENTS_ALL_SINGLE_CHAIN_LOAD = [
+	'\tconst chains = [',
+	'\t\t...loadChainsFromDir(userDir, "user"),',
+	'\t\t...(projectDir ? loadChainsFromDir(projectDir, "project") : []),',
+	'\t];',
+].join("\n");
+
+const DISCOVER_AGENTS_ALL_LEGACY_USER_DIR_FALLBACK = '\tconst userDir = fs.existsSync(userDirNew) ? userDirNew : userDirOld;';
+
+function repairHalfPatchedAgentsUserDir(source) {
+	let patched = source;
+	for (const declarations of [CURRENT_AGENT_DIR_DECLS, OLD_AGENT_DIR_DECLS]) {
+		patched = applyReplacementGroup(
+			patched,
+			[[DISCOVER_AGENTS_SINGLE_USER_LOAD, DISCOVER_AGENTS_LEGACY_USER_LOADS]],
+			[declarations],
+		);
+		patched = applyReplacementGroup(
+			patched,
+			[[DISCOVER_AGENTS_ALL_SINGLE_USER_LOAD, DISCOVER_AGENTS_ALL_LEGACY_USER_LOADS]],
+			[declarations],
+		);
+	}
+	return patched;
+}
+
+function patchOldAgentsUserDirs(source) {
+	return applyReplacementGroup(source, [
+		[OLD_AGENT_DIR_DECLS, '\tconst userDir = path.join(resolvePiAgentDir(), "agents");'],
+		[DISCOVER_AGENTS_LEGACY_USER_LOADS, DISCOVER_AGENTS_SINGLE_USER_LOAD],
+		[DISCOVER_AGENTS_ALL_LEGACY_USER_LOADS, DISCOVER_AGENTS_ALL_SINGLE_USER_LOAD],
+		[DISCOVER_AGENTS_ALL_LEGACY_CHAIN_LOADS, DISCOVER_AGENTS_ALL_SINGLE_CHAIN_LOAD],
+		[DISCOVER_AGENTS_ALL_LEGACY_USER_DIR_FALLBACK, ""],
+	]);
+}
+
 export function stripPiSubagentBuiltinModelSource(source) {
 	if (!source.startsWith("---\n")) {
 		return source;
@@ -150,254 +241,199 @@ export function patchPiSubagentsSource(relativePath, source) {
 
 	switch (target) {
 		case "index.ts":
-			patched = replaceAll(
-				patched,
-				'const configPath = path.join(os.homedir(), ".pi", "agent", "extensions", "subagent", "config.json");',
-				'const configPath = path.join(resolvePiAgentDir(), "extensions", "subagent", "config.json");',
-			);
-			patched = replaceAll(
-				patched,
-				"• PARALLEL: { tasks: [{agent,task,count?}, ...], concurrency?: number, worktree?: true } - concurrent execution (worktree: isolate each task in a git worktree)",
-				"• PARALLEL: { tasks: [{agent,task,count?,output?}, ...], concurrency?: number, worktree?: true } - concurrent execution (output: per-task file target, worktree: isolate each task in a git worktree)",
-			);
+			patched = applyReplacementGroups(patched, [
+				[[
+					'const configPath = path.join(os.homedir(), ".pi", "agent", "extensions", "subagent", "config.json");',
+					'const configPath = path.join(resolvePiAgentDir(), "extensions", "subagent", "config.json");',
+				]],
+				[[
+					"• PARALLEL: { tasks: [{agent,task,count?}, ...], concurrency?: number, worktree?: true } - concurrent execution (worktree: isolate each task in a git worktree)",
+					"• PARALLEL: { tasks: [{agent,task,count?,output?}, ...], concurrency?: number, worktree?: true } - concurrent execution (output: per-task file target, worktree: isolate each task in a git worktree)",
+				]],
+			]);
 			break;
 		case "agents.ts":
-			patched = replaceAll(
-				patched,
+			patched = repairHalfPatchedAgentsUserDir(patched);
+			patched = applyReplacementGroup(patched, [[
 				'const userDir = path.join(os.homedir(), ".pi", "agent", "agents");',
 				'const userDir = path.join(resolvePiAgentDir(), "agents");',
-			);
-			patched = replaceAll(
-				patched,
-				[
-					'export function discoverAgents(cwd: string, scope: AgentScope): AgentDiscoveryResult {',
-					'\tconst userDirOld = path.join(os.homedir(), ".pi", "agent", "agents");',
-					'\tconst userDirNew = path.join(os.homedir(), ".agents");',
-				].join("\n"),
-				[
-					'export function discoverAgents(cwd: string, scope: AgentScope): AgentDiscoveryResult {',
-					'\tconst userDir = path.join(resolvePiAgentDir(), "agents");',
-				].join("\n"),
-			);
-			patched = replaceAll(
-				patched,
-				[
-					'\tconst userAgentsOld = scope === "project" ? [] : loadAgentsFromDir(userDirOld, "user");',
-					'\tconst userAgentsNew = scope === "project" ? [] : loadAgentsFromDir(userDirNew, "user");',
-					'\tconst userAgents = [...userAgentsOld, ...userAgentsNew];',
-				].join("\n"),
-				'\tconst userAgents = scope === "project" ? [] : loadAgentsFromDir(userDir, "user");',
-			);
-			patched = replaceAll(
-				patched,
-				[
-					'const userDirOld = path.join(os.homedir(), ".pi", "agent", "agents");',
-					'const userDirNew = path.join(os.homedir(), ".agents");',
-				].join("\n"),
-				'const userDir = path.join(resolvePiAgentDir(), "agents");',
-			);
-			patched = replaceAll(
-				patched,
-				[
-					'\tconst user = [',
-					'\t\t...loadAgentsFromDir(userDirOld, "user"),',
-					'\t\t...loadAgentsFromDir(userDirNew, "user"),',
-					'\t];',
-				].join("\n"),
-				'\tconst user = loadAgentsFromDir(userDir, "user");',
-			);
-			patched = replaceAll(
-				patched,
-				[
-					'\tconst chains = [',
-					'\t\t...loadChainsFromDir(userDirOld, "user"),',
-					'\t\t...loadChainsFromDir(userDirNew, "user"),',
-					'\t\t...(projectDir ? loadChainsFromDir(projectDir, "project") : []),',
-					'\t];',
-				].join("\n"),
-				[
-					'\tconst chains = [',
-					'\t\t...loadChainsFromDir(userDir, "user"),',
-					'\t\t...(projectDir ? loadChainsFromDir(projectDir, "project") : []),',
-					'\t];',
-				].join("\n"),
-			);
-			patched = replaceAll(
-				patched,
-				'\tconst userDir = fs.existsSync(userDirNew) ? userDirNew : userDirOld;',
-				'\tconst userDir = path.join(resolvePiAgentDir(), "agents");',
-			);
+			]]);
+			patched = patchOldAgentsUserDirs(patched);
 			break;
 		case "artifacts.ts":
-			patched = replaceAll(
-				patched,
+			patched = applyReplacementGroup(patched, [[
 				'const sessionsBase = path.join(os.homedir(), ".pi", "agent", "sessions");',
 				'const sessionsBase = path.join(resolvePiAgentDir(), "sessions");',
-			);
+			]]);
 			break;
 		case "run-history.ts":
-			patched = replaceAll(
-				patched,
+			patched = applyReplacementGroup(patched, [[
 				'const HISTORY_PATH = path.join(os.homedir(), ".pi", "agent", "run-history.jsonl");',
 				'const HISTORY_PATH = path.join(resolvePiAgentDir(), "run-history.jsonl");',
-			);
+			]]);
 			break;
 		case "skills.ts":
-			patched = replaceAll(
-				patched,
+			patched = applyReplacementGroup(patched, [[
 				'const AGENT_DIR = path.join(os.homedir(), ".pi", "agent");',
 				"const AGENT_DIR = resolvePiAgentDir();",
-			);
+			]]);
 			break;
 		case "chain-clarify.ts":
-			patched = replaceAll(
-				patched,
+			patched = applyReplacementGroup(patched, [[
 				'const dir = path.join(os.homedir(), ".pi", "agent", "agents");',
 				'const dir = path.join(resolvePiAgentDir(), "agents");',
-			);
+			]]);
 			break;
 		case "pi-spawn.ts":
-			patched = replaceAll(patched, PI_SPAWN_ORIGINAL_ARGV_BLOCK, PI_SPAWN_FEYNMAN_ARGV_BLOCK_WITH_WRAPPER_MAIN);
-			patched = replaceAll(patched, PI_SPAWN_FEYNMAN_ARGV_BLOCK, PI_SPAWN_FEYNMAN_ARGV_BLOCK_WITH_WRAPPER_MAIN);
-			if (!patched.includes("\targv2?: string;")) {
-				patched = replaceAll(
-					patched,
+			patched = applyReplacementGroup(patched, [
+				[PI_SPAWN_ORIGINAL_ARGV_BLOCK, PI_SPAWN_FEYNMAN_ARGV_BLOCK_WITH_WRAPPER_MAIN],
+				[
 					"\texecPath?: string;\n\targv1?: string;",
 					"\texecPath?: string;\n\targv1?: string;\n\targv2?: string;",
-				);
-			}
+				],
+			]);
+			patched = applyReplacementGroup(patched, [
+				[PI_SPAWN_FEYNMAN_ARGV_BLOCK, PI_SPAWN_FEYNMAN_ARGV_BLOCK_WITH_WRAPPER_MAIN],
+				[
+					"\texecPath?: string;\n\targv1?: string;",
+					"\texecPath?: string;\n\targv1?: string;\n\targv2?: string;",
+				],
+			]);
 			break;
 		case "subagent-executor.ts":
-			patched = replaceAll(
-				patched,
-				[
-					"\tcwd?: string;",
-					"\tcount?: number;",
-					"\tmodel?: string;",
-					"\tskill?: string | string[] | boolean;",
-				].join("\n"),
-				[
-					"\tcwd?: string;",
-					"\tcount?: number;",
-					"\tmodel?: string;",
-					"\tskill?: string | string[] | boolean;",
-					"\toutput?: string | false;",
-				].join("\n"),
-			);
-			patched = replaceAll(
-				patched,
-				[
-					"\t\t\tcwd: task.cwd,",
-					"\t\t\t...(modelOverrides[index] ? { model: modelOverrides[index] } : {}),",
-				].join("\n"),
-				[
-					"\t\t\tcwd: task.cwd,",
-					"\t\t\toutput: task.output,",
-					"\t\t\t...(modelOverrides[index] ? { model: modelOverrides[index] } : {}),",
-				].join("\n"),
-			);
-			patched = replaceAll(
-				patched,
-				[
-					"\t\tcwd: task.cwd,",
-					"\t\t...(modelOverrides[index] ? { model: modelOverrides[index] } : {}),",
-				].join("\n"),
-				[
-					"\t\tcwd: task.cwd,",
-					"\t\toutput: task.output,",
-					"\t\t...(modelOverrides[index] ? { model: modelOverrides[index] } : {}),",
-				].join("\n"),
-			);
-			patched = replaceAll(
-				patched,
-				[
-					"\t\t\t\tcwd: t.cwd,",
-					"\t\t\t\t...(modelOverrides[i] ? { model: modelOverrides[i] } : {}),",
-				].join("\n"),
-				[
-					"\t\t\t\tcwd: t.cwd,",
-					"\t\t\t\toutput: t.output,",
-					"\t\t\t\t...(modelOverrides[i] ? { model: modelOverrides[i] } : {}),",
-				].join("\n"),
-			);
-			patched = replaceAll(
-				patched,
-				[
-					"\t\tcwd: t.cwd,",
-					"\t\t...(modelOverrides[i] ? { model: modelOverrides[i] } : {}),",
-				].join("\n"),
-				[
-					"\t\tcwd: t.cwd,",
-					"\t\toutput: t.output,",
-					"\t\t...(modelOverrides[i] ? { model: modelOverrides[i] } : {}),",
-				].join("\n"),
-			);
-			patched = replaceAll(
-				patched,
-				[
-					"\t\tconst behaviors = agentConfigs.map((c, i) =>",
-					"\t\t\tresolveStepBehavior(c, { skills: skillOverrides[i] }),",
-					"\t\t);",
-				].join("\n"),
-				[
-					"\t\tconst behaviors = agentConfigs.map((c, i) =>",
-					"\t\t\tresolveStepBehavior(c, { output: tasks[i]?.output, skills: skillOverrides[i] }),",
-					"\t\t);",
-				].join("\n"),
-			);
-			patched = replaceAll(
-				patched,
-				"\tconst behaviors = agentConfigs.map((config) => resolveStepBehavior(config, {}));",
-				"\tconst behaviors = agentConfigs.map((config, i) => resolveStepBehavior(config, { output: tasks[i]?.output, skills: skillOverrides[i] }));",
-			);
-			patched = replaceAll(
-				patched,
-				[
-					"\t\tconst taskCwd = resolveParallelTaskCwd(task, input.paramsCwd, input.worktreeSetup, index);",
-					"\t\treturn runSync(input.ctx.cwd, input.agents, task.agent, input.taskTexts[index]!, {",
-				].join("\n"),
-				[
-					"\t\tconst taskCwd = resolveParallelTaskCwd(task, input.paramsCwd, input.worktreeSetup, index);",
-					"\t\tconst outputPath = typeof input.behaviors[index]?.output === \"string\"",
-					"\t\t\t? resolveSingleOutputPath(input.behaviors[index]?.output, input.ctx.cwd, taskCwd)",
-					"\t\t\t: undefined;",
-					"\t\tconst taskText = injectSingleOutputInstruction(input.taskTexts[index]!, outputPath);",
-					"\t\treturn runSync(input.ctx.cwd, input.agents, task.agent, taskText, {",
-				].join("\n"),
-			);
-			patched = replaceAll(
-				patched,
-				[
-					"\t\t\tmaxOutput: input.maxOutput,",
-					"\t\t\tmaxSubagentDepth: input.maxSubagentDepths[index],",
-				].join("\n"),
-				[
-					"\t\t\tmaxOutput: input.maxOutput,",
-					"\t\t\toutputPath,",
-					"\t\t\tmaxSubagentDepth: input.maxSubagentDepths[index],",
-				].join("\n"),
-			);
+			{
+				const withOutputDeclaration = applyReplacementGroup(patched, [[
+					[
+						"\tcwd?: string;",
+						"\tcount?: number;",
+						"\tmodel?: string;",
+						"\tskill?: string | string[] | boolean;",
+					].join("\n"),
+					[
+						"\tcwd?: string;",
+						"\tcount?: number;",
+						"\tmodel?: string;",
+						"\tskill?: string | string[] | boolean;",
+						"\toutput?: string | false;",
+					].join("\n"),
+				]]);
+
+				if (withOutputDeclaration !== patched) {
+					patched = withOutputDeclaration;
+					patched = applyReplacementGroups(patched, [
+						[[
+							[
+								"\t\t\tcwd: task.cwd,",
+								"\t\t\t...(modelOverrides[index] ? { model: modelOverrides[index] } : {}),",
+							].join("\n"),
+							[
+								"\t\t\tcwd: task.cwd,",
+								"\t\t\toutput: task.output,",
+								"\t\t\t...(modelOverrides[index] ? { model: modelOverrides[index] } : {}),",
+							].join("\n"),
+						]],
+						[[
+							[
+								"\t\tcwd: task.cwd,",
+								"\t\t...(modelOverrides[index] ? { model: modelOverrides[index] } : {}),",
+							].join("\n"),
+							[
+								"\t\tcwd: task.cwd,",
+								"\t\toutput: task.output,",
+								"\t\t...(modelOverrides[index] ? { model: modelOverrides[index] } : {}),",
+							].join("\n"),
+						]],
+						[[
+							[
+								"\t\t\t\tcwd: t.cwd,",
+								"\t\t\t\t...(modelOverrides[i] ? { model: modelOverrides[i] } : {}),",
+							].join("\n"),
+							[
+								"\t\t\t\tcwd: t.cwd,",
+								"\t\t\t\toutput: t.output,",
+								"\t\t\t\t...(modelOverrides[i] ? { model: modelOverrides[i] } : {}),",
+							].join("\n"),
+						]],
+						[[
+							[
+								"\t\tcwd: t.cwd,",
+								"\t\t...(modelOverrides[i] ? { model: modelOverrides[i] } : {}),",
+							].join("\n"),
+							[
+								"\t\tcwd: t.cwd,",
+								"\t\toutput: t.output,",
+								"\t\t...(modelOverrides[i] ? { model: modelOverrides[i] } : {}),",
+							].join("\n"),
+						]],
+						[
+							[
+								[
+									"\t\tconst behaviors = agentConfigs.map((c, i) =>",
+									"\t\t\tresolveStepBehavior(c, { skills: skillOverrides[i] }),",
+									"\t\t);",
+								].join("\n"),
+								[
+									"\t\tconst behaviors = agentConfigs.map((c, i) =>",
+									"\t\t\tresolveStepBehavior(c, { output: tasks[i]?.output, skills: skillOverrides[i] }),",
+									"\t\t);",
+								].join("\n"),
+							],
+							[
+								"\tconst behaviors = agentConfigs.map((config) => resolveStepBehavior(config, {}));",
+								"\tconst behaviors = agentConfigs.map((config, i) => resolveStepBehavior(config, { output: tasks[i]?.output, skills: skillOverrides[i] }));",
+							],
+						],
+						[
+							[
+								[
+									"\t\tconst taskCwd = resolveParallelTaskCwd(task, input.paramsCwd, input.worktreeSetup, index);",
+									"\t\treturn runSync(input.ctx.cwd, input.agents, task.agent, input.taskTexts[index]!, {",
+								].join("\n"),
+								[
+									"\t\tconst taskCwd = resolveParallelTaskCwd(task, input.paramsCwd, input.worktreeSetup, index);",
+									"\t\tconst outputPath = typeof input.behaviors[index]?.output === \"string\"",
+									"\t\t\t? resolveSingleOutputPath(input.behaviors[index]?.output, input.ctx.cwd, taskCwd)",
+									"\t\t\t: undefined;",
+									"\t\tconst taskText = injectSingleOutputInstruction(input.taskTexts[index]!, outputPath);",
+									"\t\treturn runSync(input.ctx.cwd, input.agents, task.agent, taskText, {",
+								].join("\n"),
+							],
+							[
+								[
+									"\t\t\tmaxOutput: input.maxOutput,",
+									"\t\t\tmaxSubagentDepth: input.maxSubagentDepths[index],",
+								].join("\n"),
+								[
+									"\t\t\tmaxOutput: input.maxOutput,",
+									"\t\t\toutputPath,",
+									"\t\t\tmaxSubagentDepth: input.maxSubagentDepths[index],",
+								].join("\n"),
+							],
+						],
+					]);
+				}
+			}
 			break;
 		case "schemas.ts":
-			patched = replaceAll(
-				patched,
+			patched = applyReplacementGroup(patched, [
 				[
-					"\tcwd: Type.Optional(Type.String()),",
-					'\tcount: Type.Optional(Type.Integer({ minimum: 1, description: "Repeat this parallel task N times with the same settings." })),',
-					'\tmodel: Type.Optional(Type.String({ description: "Override model for this task (e.g. \'google/gemini-3-pro\')" })),',
-				].join("\n"),
+					[
+						"\tcwd: Type.Optional(Type.String()),",
+						'\tcount: Type.Optional(Type.Integer({ minimum: 1, description: "Repeat this parallel task N times with the same settings." })),',
+						'\tmodel: Type.Optional(Type.String({ description: "Override model for this task (e.g. \'google/gemini-3-pro\')" })),',
+					].join("\n"),
+					[
+						"\tcwd: Type.Optional(Type.String()),",
+						'\tcount: Type.Optional(Type.Integer({ minimum: 1, description: "Repeat this parallel task N times with the same settings." })),',
+						'\toutput: Type.Optional(Type.Any({ description: "Output file for this parallel task (string), or false to disable. Relative paths resolve against cwd." })),',
+						'\tmodel: Type.Optional(Type.String({ description: "Override model for this task (e.g. \'google/gemini-3-pro\')" })),',
+					].join("\n"),
+				],
 				[
-					"\tcwd: Type.Optional(Type.String()),",
-					'\tcount: Type.Optional(Type.Integer({ minimum: 1, description: "Repeat this parallel task N times with the same settings." })),',
-					'\toutput: Type.Optional(Type.Any({ description: "Output file for this parallel task (string), or false to disable. Relative paths resolve against cwd." })),',
-					'\tmodel: Type.Optional(Type.String({ description: "Override model for this task (e.g. \'google/gemini-3-pro\')" })),',
-				].join("\n"),
-			);
-			patched = replaceAll(
-				patched,
-				'tasks: Type.Optional(Type.Array(TaskItem, { description: "PARALLEL mode: [{agent, task, count?}, ...]" })),',
-				'tasks: Type.Optional(Type.Array(TaskItem, { description: "PARALLEL mode: [{agent, task, count?, output?}, ...]" })),',
-			);
+					'tasks: Type.Optional(Type.Array(TaskItem, { description: "PARALLEL mode: [{agent, task, count?}, ...]" })),',
+					'tasks: Type.Optional(Type.Array(TaskItem, { description: "PARALLEL mode: [{agent, task, count?, output?}, ...]" })),',
+				],
+			]);
 			break;
 		default:
 			return source;
