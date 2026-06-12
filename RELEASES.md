@@ -4,6 +4,17 @@ This file is the public release history for Feynman. Keep entries user-facing: w
 
 GitHub release notes are generated from the matching `## vX.Y.Z` section in this file.
 
+## v0.3.2 - 2026-06-11
+
+### Subagents
+
+- Fixed subagent launches failing with `userDir is not defined`. Upstream pi-subagents moved its directory handling behind `getAgentDir()` (which natively honors `PI_CODING_AGENT_DIR`), so Feynman's launch-time patch partially applied — rewriting usages whose declarations no longer matched. The patcher now applies grouped edits transactionally (a usage rewrite only lands with its paired declaration), repairs already-broken installs in place, and stops rewriting what upstream now handles itself.
+- Fixed the persistent Windows `Cannot find module '...\--mode'` subagent failure (#172) at its true root: Pi resolves user-scope packages from Feynman's pinned npm prefix (`~/.feynman/npm-global/lib/node_modules`). When that copy is a real directory instead of a link into the bundled workspace — junction-creation fallback or a `feynman update` reinstall — it was never patched, so unpatched spawn code executed regardless of the fixes shipped in 0.2.59–0.3.1. That package root is now a first-class patch target in both launch-time patchers.
+
+### Validation
+
+- The end-to-end workflow's subagent smoke now requires the child's actual relayed output (`RESULT=PONG`), not just the parent's completion marker — earlier passes could be vacuous when the tool call failed and the model narrated past it. Verified by driving the interactive TUI in conversation on a clean Linux machine.
+
 ## v0.3.1 - 2026-06-11
 
 ### Windows

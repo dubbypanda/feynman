@@ -1,5 +1,5 @@
 import { existsSync, readFileSync, writeFileSync } from "node:fs";
-import { resolve } from "node:path";
+import { dirname, resolve } from "node:path";
 
 import { patchAlphaHubAuthSource } from "../../scripts/lib/alpha-hub-auth-patch.mjs";
 import { patchAlphaHubSearchResultsSource, patchAlphaHubSearchSource } from "../../scripts/lib/alpha-hub-search-patch.mjs";
@@ -54,11 +54,18 @@ function patchScopedPiPackageFileIfPresent(
 	return changed;
 }
 
-export function patchPiRuntimeNodeModules(appRoot: string): boolean {
+export function patchPiRuntimeNodeModules(appRoot: string, feynmanAgentDir?: string): boolean {
 	const nodeModuleRoots = [
 		resolve(appRoot, "node_modules"),
 		resolve(appRoot, ".feynman", "npm", "node_modules"),
 	];
+	if (feynmanAgentDir) {
+		// Pi resolves user-scope packages from Feynman's pinned npm prefix. When
+		// that copy is a real directory (junction-creation fallback or a
+		// `feynman update` reinstall) instead of a link into the bundled
+		// workspace, it must be patched too or unpatched sources execute.
+		nodeModuleRoots.push(resolve(dirname(feynmanAgentDir), "npm-global", "lib", "node_modules"));
+	}
 	let changed = false;
 	for (const nodeModulesPath of nodeModuleRoots) {
 		changed = patchScopedPiPackageFileIfPresent(

@@ -14,7 +14,7 @@ export function exitCodeFromSignal(signal: NodeJS.Signals): number {
 
 export async function launchPiChat(options: PiRuntimeOptions): Promise<void> {
 	ensureSupportedNodeVersion();
-	patchPiRuntimeNodeModules(options.appRoot);
+	patchPiRuntimeNodeModules(options.appRoot, options.feynmanAgentDir);
 
 	const paths = resolvePiPaths(options.appRoot);
 	const {

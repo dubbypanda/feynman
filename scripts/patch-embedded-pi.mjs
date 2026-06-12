@@ -1,5 +1,5 @@
 import { spawnSync } from "node:child_process";
-import { existsSync, lstatSync, mkdirSync, readdirSync, readFileSync, readlinkSync, rmSync, statSync, symlinkSync, writeFileSync } from "node:fs";
+import { existsSync, lstatSync, mkdirSync, readdirSync, readFileSync, readlinkSync, realpathSync, rmSync, statSync, symlinkSync, writeFileSync } from "node:fs";
 import { createRequire } from "node:module";
 import { homedir } from "node:os";
 import { delimiter, dirname, isAbsolute, relative, resolve } from "node:path";
@@ -601,9 +601,20 @@ function ensurePandoc() {
 
 ensurePandoc();
 
-if (existsSync(piSubagentsRoot)) {
+const globalPiSubagentsRoot = resolve(globalNodeModulesRoot, "pi-subagents");
+for (const subagentsRoot of new Set(
+	[piSubagentsRoot, globalPiSubagentsRoot]
+		.filter((root) => existsSync(root))
+		.map((root) => {
+			try {
+				return realpathSync(root);
+			} catch {
+				return root;
+			}
+		}),
+)) {
 	for (const relativePath of PI_SUBAGENTS_PATCH_TARGETS) {
-		const entryPath = resolve(piSubagentsRoot, relativePath);
+		const entryPath = resolve(subagentsRoot, relativePath);
 		if (!existsSync(entryPath)) continue;
 
 		const source = readFileSync(entryPath, "utf8");
