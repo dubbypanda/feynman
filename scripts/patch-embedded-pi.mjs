@@ -602,8 +602,9 @@ function ensurePandoc() {
 ensurePandoc();
 
 const globalPiSubagentsRoot = resolve(globalNodeModulesRoot, "pi-subagents");
+const agentNpmPiSubagentsRoot = resolve(feynmanHome, "agent", "npm", "node_modules", "pi-subagents");
 for (const subagentsRoot of new Set(
-	[piSubagentsRoot, globalPiSubagentsRoot]
+	[piSubagentsRoot, globalPiSubagentsRoot, agentNpmPiSubagentsRoot]
 		.filter((root) => existsSync(root))
 		.map((root) => {
 			try {

@@ -172,17 +172,34 @@ jobs:
             const { execSync } = require("node:child_process");
             const { readFileSync, writeFileSync, existsSync } = require("node:fs");
             const { join } = require("node:path");
+            const os = require("node:os");
             const root = execSync("npm root -g").toString().trim();
-            const spawnPath = join(root, "@companion-ai", "feynman", ".feynman", "npm", "node_modules", "pi-subagents", "src", "runs", "shared", "pi-spawn.ts");
-            if (!existsSync(spawnPath)) { console.log("no pi-spawn to instrument"); process.exit(0); }
-            let src = readFileSync(spawnPath, "utf8");
-            const anchor = "export function getPiSpawnCommand(args: string[], deps: PiSpawnDeps = {}): PiSpawnCommand {";
-            if (!src.includes(anchor)) { console.log("anchor missing; layout differs"); process.exit(0); }
-            src = src.replace(anchor, anchor + "\n\tconsole.error(\"[pi-spawn-diag]\", JSON.stringify({ platform: deps.platform ?? process.platform, env: process.env.FEYNMAN_PI_CLI_PATH ?? null, argv1: deps.argv1 ?? process.argv[1] ?? null, argv2: deps.argv2 ?? process.argv[2] ?? null }));");
-            const ret = "\treturn { command: \"pi\", args };";
-            src = src.replace(ret, "\tconsole.error(\"[pi-spawn-diag-fallthrough]\", \"returning bare pi\");\n" + ret);
-            writeFileSync(spawnPath, src);
-            console.log("instrumented", spawnPath);
+            const pkg = join(root, "@companion-ai", "feynman");
+            const feynmanHome = process.env.FEYNMAN_HOME ? join(process.env.FEYNMAN_HOME, ".feynman") : join(os.homedir(), ".feynman");
+            const candidates = [
+              join(pkg, ".feynman", "npm", "node_modules", "pi-subagents"),
+              join(pkg, "node_modules", "pi-subagents"),
+              join(feynmanHome, "npm-global", "lib", "node_modules", "pi-subagents"),
+              join(feynmanHome, "agent", "npm", "node_modules", "pi-subagents"),
+              join(os.homedir(), ".feynman", "npm-global", "lib", "node_modules", "pi-subagents"),
+              join(os.homedir(), ".feynman", "agent", "npm", "node_modules", "pi-subagents"),
+            ];
+            const seen = new Set();
+            for (const dir of candidates) {
+              const spawnPath = join(dir, "src", "runs", "shared", "pi-spawn.ts");
+              const exists = existsSync(spawnPath);
+              console.log(exists ? "COPY:" : "absent:", dir);
+              if (!exists || seen.has(spawnPath)) continue;
+              seen.add(spawnPath);
+              let src = readFileSync(spawnPath, "utf8");
+              console.log("  patched(wrapperPiCliPath):", src.includes("wrapperPiCliPath"));
+              const anchor = "export function getPiSpawnCommand(args: string[], deps: PiSpawnDeps = {}): PiSpawnCommand {";
+              if (src.includes(anchor) && !src.includes("pi-spawn-diag")) {
+                src = src.replace(anchor, anchor + "\n\tconsole.error(\"[pi-spawn-diag]\", JSON.stringify({ from: import.meta.url, env: process.env.FEYNMAN_PI_CLI_PATH ?? null, argv1: process.argv[1] ?? null, argv2: process.argv[2] ?? null }));");
+                writeFileSync(spawnPath, src);
+                console.log("  instrumented");
+              }
+            }
           '
 
       - name: Live subagent smoke (issue 172 end-to-end)

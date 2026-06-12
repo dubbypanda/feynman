@@ -65,6 +65,9 @@ export function patchPiRuntimeNodeModules(appRoot: string, feynmanAgentDir?: str
 		// `feynman update` reinstall) instead of a link into the bundled
 		// workspace, it must be patched too or unpatched sources execute.
 		nodeModuleRoots.push(resolve(dirname(feynmanAgentDir), "npm-global", "lib", "node_modules"));
+		// Pi's own package manager installs into <agentDir>/npm since Pi 0.75;
+		// a startup self-install lands fresh unpatched sources there.
+		nodeModuleRoots.push(resolve(feynmanAgentDir, "npm", "node_modules"));
 	}
 	let changed = false;
 	for (const nodeModulesPath of nodeModuleRoots) {
