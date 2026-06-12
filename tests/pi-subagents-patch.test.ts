@@ -325,7 +325,42 @@ test("patchPiSubagentsSource makes pi-spawn prefer the real Pi CLI over Feynman 
 
 	assert.match(patched, /process\.env\.FEYNMAN_PI_CLI_PATH/);
 	assert.match(patched, /path\.basename\(argvPath\) !== "pi-cli-wrapper\.js"/);
+	assert.match(patched, /const argv2 = deps\.argv2 \?\? process\.argv\[2\]/);
+	assert.match(patched, /path\.join\(path\.dirname\(normalizePath\(argv2\)\), "cli\.js"\)/);
 	assert.doesNotMatch(patched, /resolvePiAgentDir/);
+});
+
+test("patchPiSubagentsSource upgrades old Feynman pi-spawn patch to derive cli.js from wrapper main arg", () => {
+	const input = [
+		"export interface PiSpawnDeps {",
+		"\texecPath?: string;",
+		"\targv1?: string;",
+		"}",
+		"export function resolveWindowsPiCliScript(deps: PiSpawnDeps = {}): string | undefined {",
+		"\tconst existsSync = deps.existsSync ?? fs.existsSync;",
+		'\tconst readFileSync = deps.readFileSync ?? ((filePath, encoding) => fs.readFileSync(filePath, encoding));',
+		"\tconst argv1 = deps.argv1 ?? process.argv[1];",
+		"\tconst feynmanPiCliPath = process.env.FEYNMAN_PI_CLI_PATH;",
+		"\tif (feynmanPiCliPath) {",
+		"\t\tconst cliPath = normalizePath(feynmanPiCliPath);",
+		"\t\tif (isRunnableNodeScript(cliPath, existsSync)) return cliPath;",
+		"\t}",
+		"",
+		"\tif (argv1) {",
+		"\t\tconst argvPath = normalizePath(argv1);",
+		'\t\tif (path.basename(argvPath) !== "pi-cli-wrapper.js" && isRunnableNodeScript(argvPath, existsSync)) {',
+		"\t\t\treturn argvPath;",
+		"\t\t}",
+		"\t}",
+		"}",
+	].join("\n");
+
+	const patched = patchPiSubagentsSource("src/runs/shared/pi-spawn.ts", input);
+
+	assert.match(patched, /\targv2\?: string;/);
+	assert.match(patched, /const argv2 = deps\.argv2 \?\? process\.argv\[2\]/);
+	assert.match(patched, /path\.basename\(argvPath\) === "pi-cli-wrapper\.js" && argv2/);
+	assert.match(patched, /path\.join\(path\.dirname\(normalizePath\(argv2\)\), "cli\.js"\)/);
 });
 
 test("stripPiSubagentBuiltinModelSource removes built-in model pins", () => {
@@ -345,4 +380,31 @@ test("stripPiSubagentBuiltinModelSource removes built-in model pins", () => {
 	assert.ok(!patched.includes("model: anthropic/claude-sonnet-4-6"));
 	assert.match(patched, /name: researcher/);
 	assert.match(patched, /tools: read, web_search/);
+});
+
+test("pi-spawn patch is idempotent including the SpawnDeps argv2 member", () => {
+	const input = [
+		"interface SpawnDeps {",
+		"\texecPath?: string;",
+		"\targv1?: string;",
+		"\texistsSync?: (filePath: string) => boolean;",
+		"}",
+		"",
+		"\tconst argv1 = deps.argv1 ?? process.argv[1];",
+		"",
+		"\tif (argv1) {",
+		"\t\tconst argvPath = normalizePath(argv1);",
+		"\t\tif (isRunnableNodeScript(argvPath, existsSync)) {",
+		"\t\t\treturn argvPath;",
+		"\t\t}",
+		"\t}",
+		"",
+	].join("\n");
+
+	const once = patchPiSubagentsSource("src/runs/shared/pi-spawn.ts", input);
+	const twice = patchPiSubagentsSource("src/runs/shared/pi-spawn.ts", once);
+
+	assert.equal(twice, once);
+	assert.equal((once.match(/argv2\?: string;/g) ?? []).length, 1);
+	assert.match(once, /wrapperPiCliPath/);
 });

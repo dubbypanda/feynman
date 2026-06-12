@@ -4,6 +4,16 @@ This file is the public release history for Feynman. Keep entries user-facing: w
 
 GitHub release notes are generated from the matching `## vX.Y.Z` section in this file.
 
+## v0.3.1 - 2026-06-11
+
+### Windows
+
+- Fixed a recurrence of subagent launches failing with `Cannot find module '...\--mode'` (#172). When `FEYNMAN_PI_CLI_PATH` is missing or unusable inside the subagent-spawning process, the Pi CLI resolver could fall through to re-selecting Feynman's wrapper without the Pi main-module argument. The resolver now derives the real Pi CLI from the wrapper's own launch arguments, and the wrapper self-heals the environment variable for its children, so the spawn no longer depends on env propagation at all.
+
+### Validation
+
+- Regression tests cover fresh and previously-patched resolver shapes, double-application idempotency, and the wrapper's env self-heal; verified by the multi-OS end-to-end workflow including the Windows subagent smoke.
+
 ## v0.3.0 - 2026-06-11
 
 ### Pi Runtime 0.79 (breaking: Node floor)

@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { mkdirSync, mkdtempSync, writeFileSync } from "node:fs";
+import { mkdirSync, mkdtempSync, readFileSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import test from "node:test";
@@ -221,6 +221,13 @@ test("resolvePiPaths falls back to the vendored runtime workspace in packed inst
 	assert.equal(paths.piPackageRoot, join(appRoot, ".feynman", "npm", "node_modules", "@earendil-works", "pi-coding-agent"));
 	assert.equal(paths.piCliPath, join(piDist, "cli.js"));
 	assert.deepEqual(validatePiInstallation(appRoot), []);
+});
+
+test("pi-cli wrapper derives FEYNMAN_PI_CLI_PATH from the Pi main module", () => {
+	const source = readFileSync(join(process.cwd(), "src", "pi", "pi-cli-wrapper.ts"), "utf8");
+
+	assert.match(source, /join\(dirname\(piMainPath\), "cli\.js"\)/);
+	assert.match(source, /process\.env\.FEYNMAN_PI_CLI_PATH = piCliPath/);
 });
 
 test("toNodeImportSpecifier converts absolute preload paths to file URLs", () => {

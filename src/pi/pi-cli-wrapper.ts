@@ -1,3 +1,5 @@
+import { existsSync } from "node:fs";
+import { dirname, join } from "node:path";
 import { pathToFileURL } from "node:url";
 
 import { EnvHttpProxyAgent, setGlobalDispatcher } from "undici";
@@ -16,6 +18,10 @@ async function run(): Promise<void> {
 	const [piMainPath, ...args] = process.argv.slice(2);
 	if (!piMainPath) {
 		throw new Error("Missing Pi main module path.");
+	}
+	const piCliPath = join(dirname(piMainPath), "cli.js");
+	if (!process.env.FEYNMAN_PI_CLI_PATH && existsSync(piCliPath)) {
+		process.env.FEYNMAN_PI_CLI_PATH = piCliPath;
 	}
 
 	process.title = "feynman";

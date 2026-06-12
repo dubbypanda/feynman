@@ -27,6 +27,54 @@ const RESOLVE_PI_AGENT_DIR_HELPER = [
 	"}",
 ].join("\n");
 
+const PI_SPAWN_ORIGINAL_ARGV_BLOCK = [
+	"\tconst argv1 = deps.argv1 ?? process.argv[1];",
+	"",
+	"\tif (argv1) {",
+	"\t\tconst argvPath = normalizePath(argv1);",
+	"\t\tif (isRunnableNodeScript(argvPath, existsSync)) {",
+	"\t\t\treturn argvPath;",
+	"\t\t}",
+	"\t}",
+].join("\n");
+
+const PI_SPAWN_FEYNMAN_ARGV_BLOCK = [
+	"\tconst argv1 = deps.argv1 ?? process.argv[1];",
+	"\tconst feynmanPiCliPath = process.env.FEYNMAN_PI_CLI_PATH;",
+	"\tif (feynmanPiCliPath) {",
+	"\t\tconst cliPath = normalizePath(feynmanPiCliPath);",
+	"\t\tif (isRunnableNodeScript(cliPath, existsSync)) return cliPath;",
+	"\t}",
+	"",
+	"\tif (argv1) {",
+	"\t\tconst argvPath = normalizePath(argv1);",
+	"\t\tif (path.basename(argvPath) !== \"pi-cli-wrapper.js\" && isRunnableNodeScript(argvPath, existsSync)) {",
+	"\t\t\treturn argvPath;",
+	"\t\t}",
+	"\t}",
+].join("\n");
+
+const PI_SPAWN_FEYNMAN_ARGV_BLOCK_WITH_WRAPPER_MAIN = [
+	"\tconst argv1 = deps.argv1 ?? process.argv[1];",
+	"\tconst argv2 = deps.argv2 ?? process.argv[2];",
+	"\tconst feynmanPiCliPath = process.env.FEYNMAN_PI_CLI_PATH;",
+	"\tif (feynmanPiCliPath) {",
+	"\t\tconst cliPath = normalizePath(feynmanPiCliPath);",
+	"\t\tif (isRunnableNodeScript(cliPath, existsSync)) return cliPath;",
+	"\t}",
+	"",
+	"\tif (argv1) {",
+	"\t\tconst argvPath = normalizePath(argv1);",
+	"\t\tif (path.basename(argvPath) !== \"pi-cli-wrapper.js\" && isRunnableNodeScript(argvPath, existsSync)) {",
+	"\t\t\treturn argvPath;",
+	"\t\t}",
+	"\t\tif (path.basename(argvPath) === \"pi-cli-wrapper.js\" && argv2) {",
+	"\t\t\tconst wrapperPiCliPath = path.join(path.dirname(normalizePath(argv2)), \"cli.js\");",
+	"\t\t\tif (isRunnableNodeScript(wrapperPiCliPath, existsSync)) return wrapperPiCliPath;",
+	"\t\t}",
+	"\t}",
+].join("\n");
+
 function injectResolvePiAgentDirHelper(source) {
 	if (source.includes("function resolvePiAgentDir(): string {")) {
 		return source;
@@ -209,34 +257,15 @@ export function patchPiSubagentsSource(relativePath, source) {
 			);
 			break;
 		case "pi-spawn.ts":
-			patched = replaceAll(
-				patched,
-				[
-					"\tconst argv1 = deps.argv1 ?? process.argv[1];",
-					"",
-					"\tif (argv1) {",
-					"\t\tconst argvPath = normalizePath(argv1);",
-					"\t\tif (isRunnableNodeScript(argvPath, existsSync)) {",
-					"\t\t\treturn argvPath;",
-					"\t\t}",
-					"\t}",
-				].join("\n"),
-				[
-					"\tconst argv1 = deps.argv1 ?? process.argv[1];",
-					"\tconst feynmanPiCliPath = process.env.FEYNMAN_PI_CLI_PATH;",
-					"\tif (feynmanPiCliPath) {",
-					"\t\tconst cliPath = normalizePath(feynmanPiCliPath);",
-					"\t\tif (isRunnableNodeScript(cliPath, existsSync)) return cliPath;",
-					"\t}",
-					"",
-					"\tif (argv1) {",
-					"\t\tconst argvPath = normalizePath(argv1);",
-					"\t\tif (path.basename(argvPath) !== \"pi-cli-wrapper.js\" && isRunnableNodeScript(argvPath, existsSync)) {",
-					"\t\t\treturn argvPath;",
-					"\t\t}",
-					"\t}",
-				].join("\n"),
-			);
+			patched = replaceAll(patched, PI_SPAWN_ORIGINAL_ARGV_BLOCK, PI_SPAWN_FEYNMAN_ARGV_BLOCK_WITH_WRAPPER_MAIN);
+			patched = replaceAll(patched, PI_SPAWN_FEYNMAN_ARGV_BLOCK, PI_SPAWN_FEYNMAN_ARGV_BLOCK_WITH_WRAPPER_MAIN);
+			if (!patched.includes("\targv2?: string;")) {
+				patched = replaceAll(
+					patched,
+					"\texecPath?: string;\n\targv1?: string;",
+					"\texecPath?: string;\n\targv1?: string;\n\targv2?: string;",
+				);
+			}
 			break;
 		case "subagent-executor.ts":
 			patched = replaceAll(
