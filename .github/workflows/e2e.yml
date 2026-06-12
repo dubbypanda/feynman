@@ -165,6 +165,26 @@ jobs:
             console.log("agents.ts userDir used:", used, "declared:", declared);
           '
 
+      - name: Instrument pi-spawn for runtime evidence
+        if: env.FEYNMAN_HOME != ''
+        run: |
+          node -e '
+            const { execSync } = require("node:child_process");
+            const { readFileSync, writeFileSync, existsSync } = require("node:fs");
+            const { join } = require("node:path");
+            const root = execSync("npm root -g").toString().trim();
+            const spawnPath = join(root, "@companion-ai", "feynman", ".feynman", "npm", "node_modules", "pi-subagents", "src", "runs", "shared", "pi-spawn.ts");
+            if (!existsSync(spawnPath)) { console.log("no pi-spawn to instrument"); process.exit(0); }
+            let src = readFileSync(spawnPath, "utf8");
+            const anchor = "export function getPiSpawnCommand(args: string[], deps: PiSpawnDeps = {}): PiSpawnCommand {";
+            if (!src.includes(anchor)) { console.log("anchor missing; layout differs"); process.exit(0); }
+            src = src.replace(anchor, anchor + "\n\tconsole.error(\"[pi-spawn-diag]\", JSON.stringify({ platform: deps.platform ?? process.platform, env: process.env.FEYNMAN_PI_CLI_PATH ?? null, argv1: deps.argv1 ?? process.argv[1] ?? null, argv2: deps.argv2 ?? process.argv[2] ?? null }));");
+            const ret = "\treturn { command: \"pi\", args };";
+            src = src.replace(ret, "\tconsole.error(\"[pi-spawn-diag-fallthrough]\", \"returning bare pi\");\n" + ret);
+            writeFileSync(spawnPath, src);
+            console.log("instrumented", spawnPath);
+          '
+
       - name: Live subagent smoke (issue 172 end-to-end)
         if: env.FEYNMAN_HOME != ''
         run: |
@@ -178,5 +198,6 @@ jobs:
           done
           # RESULT=PONG can only appear if the child actually ran and returned
           # its reply; a failed tool call makes the parent relay an error word.
+          grep -o "\[pi-spawn-diag[^\\]*" subagent.log | head -5 || true
           grep -q "RESULT=PONG" subagent.log || { echo "child output not relayed:" >&2; grep -o "RESULT=[A-Za-z_]*" subagent.log >&2; tail -30 subagent.log >&2; exit 1; }
           echo "subagent smoke ok"
