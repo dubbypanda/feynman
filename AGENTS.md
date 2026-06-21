@@ -26,6 +26,25 @@ Keep this file focused on cross-agent repo conventions:
 
 Do **not** restate per-agent prompt text here unless there is a repo-wide constraint that applies to all agents.
 
+## Feature scope
+
+Feynman must stay simple yet potent. It is an AI researcher, not a bundle of adjacent productivity workflows.
+
+Every new feature must fight for its life before implementation. Keep or add a feature only when it directly improves at least one core research job:
+
+- discovering relevant papers, code, datasets, or prior art
+- reading, extracting, and understanding paper content
+- ranking evidence, methods, reproducibility, or citation structure
+- verifying claims against sources, code, data, or experiments
+- planning or running reproductions and research experiments
+- synthesizing research into auditable artifacts
+- visualizing research structure when the visualization changes a research decision
+- improving speed, observability, provenance, or reliability of the research loop
+
+Reject adjacent product lanes by default. Funding, proposal, sales, admin, generic writing, and project-management workflows do not belong in Feynman unless the user explicitly scopes them as support for a specific active research run.
+
+Before adding a command, prompt, tool, extension, dashboard, document page, or release-note item, state the core research job it serves and the smallest existing surface that can absorb it. If the value is not concrete and testable, do not add it.
+
 ## Pi runtime changes
 
 - Feynman wraps Pi. Before changing telemetry, tools, extensions, runtime package setup, model/prompt handoff, or child-process env, read the installed Pi package version, `node_modules/@earendil-works/pi-coding-agent/docs/`, and the matching runtime source.
