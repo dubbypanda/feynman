@@ -6,18 +6,21 @@ const reactShellSource = readFileSync(new URL("../workbench-web/src/main.tsx", i
 const pdfPreviewSource = readFileSync(new URL("../workbench-web/src/pdf-preview.tsx", import.meta.url), "utf8");
 const scienceViewersSource = readFileSync(new URL("../workbench-web/src/science-viewers.tsx", import.meta.url), "utf8");
 const reactShellStyles = readFileSync(new URL("../workbench-web/src/styles.css", import.meta.url), "utf8");
+const railActionsSource = reactShellSource.match(
+	/<div className="rail-actions">[\s\S]*?<\/div>\s*\n\s*<div className="session-heading">/,
+)?.[0] ?? "";
 
 test("React workbench source owns the project Files and artifact inspection surfaces", () => {
 	assert.match(reactShellSource, /className="rail-actions"/);
+	assert.match(railActionsSource, /<span>New chat<\/span>/);
+	assert.match(railActionsSource, /<span>Customize<\/span>/);
+	assert.match(railActionsSource, /<span>Files<\/span>/);
+	assert.doesNotMatch(railActionsSource, /<span>Search<\/span>|<span>Notebook<\/span>|<span>Compute<\/span>|<span>Memory<\/span>/);
 	assert.match(reactShellSource, /className="project-card"/);
 	assert.match(reactShellSource, /function ProjectLauncher/);
 	assert.match(reactShellSource, /className="launcher-project-card"/);
 	assert.match(reactShellSource, /<span>New project<\/span>/);
 	assert.match(reactShellSource, /className="session-heading"/);
-	assert.match(reactShellSource, /<span>Files<\/span>/);
-	assert.match(reactShellSource, /<span>Notebook<\/span>/);
-	assert.match(reactShellSource, /<span>Compute<\/span>/);
-	assert.match(reactShellSource, /<span>Customize<\/span>/);
 	assert.match(reactShellSource, /className="files-overlay-react"/);
 	assert.match(reactShellSource, /aria-label="Files overlay"/);
 	assert.match(reactShellSource, /Search files/);

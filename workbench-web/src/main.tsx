@@ -2835,29 +2835,13 @@ function App() {
 						<Plus size={16} aria-hidden />
 						<span>New chat</span>
 					</button>
-					<button type="button" onClick={() => setCommandPaletteOpen(true)}>
-						<Search size={16} aria-hidden />
-						<span>Search</span>
+					<button type="button" onClick={() => setSidePanel(sidePanel === "customize" ? null : "customize")}>
+						<Settings size={16} aria-hidden />
+						<span>Customize</span>
 					</button>
 					<button type="button" onClick={() => setSidePanel(sidePanel === "files" ? null : "files")}>
 						<FolderOpen size={16} aria-hidden />
 						<span>Files</span>
-					</button>
-					<button type="button" onClick={() => setSidePanel(sidePanel === "notebook" ? null : "notebook")}>
-						<Play size={16} aria-hidden />
-						<span>Notebook</span>
-					</button>
-					<button type="button" onClick={() => setSidePanel(sidePanel === "compute" ? null : "compute")}>
-						<Database size={16} aria-hidden />
-						<span>Compute</span>
-					</button>
-					<button type="button" onClick={() => setSidePanel(sidePanel === "memory" ? null : "memory")}>
-						<BookOpen size={16} aria-hidden />
-						<span>Memory</span>
-					</button>
-					<button type="button" onClick={() => setSidePanel(sidePanel === "customize" ? null : "customize")}>
-						<Settings size={16} aria-hidden />
-						<span>Customize</span>
 					</button>
 				</div>
 

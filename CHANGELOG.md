@@ -4,6 +4,13 @@ Workspace lab notebook for long-running or resumable research work.
 
 Use this file to track chronology, not release notes. Keep entries short, factual, and operational.
 
+### 2026-07-05 13:12 EDT — workbench-project-rail-parity
+
+- Objective: Continue the Claude Science 1:1 workbench parity goal by making the in-project rail match the reference project action structure.
+- Changed: The React workbench rail now exposes only the primary project actions in reference order: `New chat`, `Customize`, and `Files`. Search remains available through the command palette/search surfaces, and notebook, compute, and memory remain available through their owned workbench surfaces instead of appearing as peer rail actions.
+- Verified: Focused React/file-surface tests passed (`17/17`); root/workbench typecheck passed; `npm run build:workbench-web` passed with existing science-viewer bundle warnings; headless browser verification on `session-20260705160452-ae55be` showed rendered rail actions exactly `New chat`, `Customize`, `Files`, no side panel, shell class `app-shell`, and conversation width `924px` at `1180px` viewport; architecture check passed with existing split-debt warnings; `git diff --check` passed; and full `npm test` passed (`585/585`).
+- Next: Commit the focused rail slice, then continue with the next live rendered parity mismatch.
+
 ### 2026-07-05 12:52 EDT — workbench-empty-frame-layout-parity
 
 - Objective: Continue the Claude Science 1:1 workbench parity goal by fixing the blank/new-frame layout mismatch found in the live Feynman route.
