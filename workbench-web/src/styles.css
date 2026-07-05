@@ -326,9 +326,9 @@ button {
 	display: flex;
 	align-items: center;
 	justify-content: space-between;
-	gap: 20px;
-	padding: 18px 24px 12px;
-	border-bottom: 1px solid #343c32;
+	gap: 16px;
+	padding: 44px 74px 18px;
+	border-bottom: 0;
 }
 
 .topbar > div:first-child {
@@ -336,16 +336,13 @@ button {
 	min-width: 0;
 }
 
-.topbar .eyebrow {
-	color: #98a38f;
-}
-
 .topbar h1 {
-	margin: 2px 0 0;
-	font-size: 20px;
-	line-height: 1.2;
+	margin: 0;
+	font-size: 26px;
+	font-weight: 520;
+	line-height: 1.18;
 	letter-spacing: 0;
-	color: #f5f8ee;
+	color: #d9ded4;
 	overflow: hidden;
 	text-overflow: ellipsis;
 	white-space: nowrap;
@@ -359,8 +356,8 @@ button {
 }
 
 .topbar-right {
+	display: none;
 	flex: 0 0 auto;
-	display: grid;
 	justify-items: end;
 	gap: 8px;
 	min-width: min(300px, 48%);
@@ -501,7 +498,7 @@ button {
 }
 
 .context-strip {
-	display: flex;
+	display: none;
 	align-items: center;
 	gap: 8px;
 	padding: 10px 24px;

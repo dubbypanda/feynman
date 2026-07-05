@@ -2888,7 +2888,6 @@ function App() {
 			<main className="conversation">
 				<header className="topbar">
 					<div>
-						<p className="eyebrow">Science workbench</p>
 						<h1>{run?.title ?? project?.name ?? "Research chat"}</h1>
 					</div>
 					<div className="topbar-right">

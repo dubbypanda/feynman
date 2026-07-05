@@ -29,6 +29,9 @@ test("React workbench source owns the project Files and artifact inspection surf
 	assert.match(reactShellSource, /validLinkedArtifact \? "files" : current === "files" \? null : current/);
 	assert.match(reactShellSource, /artifactPath \? "files" : current === "files" \? null : current/);
 	assert.doesNotMatch(reactShellSource, /nextArtifactPath \? "files"/);
+	assert.doesNotMatch(reactShellSource, /Science workbench/);
+	assert.match(reactShellStyles, /\.topbar-right\s*\{[\s\S]*?display: none;/);
+	assert.match(reactShellStyles, /\.context-strip\s*\{[\s\S]*?display: none;/);
 	assert.match(reactShellSource, /aria-label="Files overlay"/);
 	assert.match(reactShellSource, /Search files/);
 	assert.match(reactShellSource, /function fileHostsForState/);
