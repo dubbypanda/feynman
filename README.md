@@ -134,6 +134,9 @@ $ feynman paper 10.7717/peerj.4375 --fetch-full-text
 $ feynman serve
 → Opens the standalone science workbench with projects, Pi chat, Feynman Bio Tools, notebooks, compute, artifact previews, provenance, settings, skills, and onboarding context
 
+$ feynman serve --no-auth
+→ Opens the same local workbench at a plain localhost URL for trusted local testing
+
 $ feynman audit 2401.12345
 → Compares paper claims against the public codebase
 
@@ -154,7 +157,7 @@ Ask naturally or use slash commands as shortcuts.
 | --- | --- |
 | `feynman rank <topic>` | PaperRank scoring for deciding what to read first, with transparent evidence for citations, methods, reproducibility, and provenance |
 | `feynman paper <id-or-title>` | Paper access resolver for one DOI, arXiv ID, OpenAlex ID, PMID, PMCID, or title, with OpenAlex, arXiv/alphaXiv, DOI, and Europe PMC candidates plus optional source-specific text fetching |
-| `feynman serve` | Standalone science workbench with project/session navigation, project metadata, in-app Pi chat, Feynman Bio Tools, Ketcher chemistry sketch artifacts, notebooks, compute, Files host inventory for local, SSH/BYOC, and cloud-backed artifact contexts, audio/video/spreadsheet/notebook/LaTeX/science artifact previews including element-level HTML report annotations and KET/RXN/CDXML/CXSMILES chemistry sketches, artifact Notes and note preview modals, Cloud storage credential modal, Cloud export target/destination modal, frame records, frame message rows, frame backfill health records, lineage, provenance, settings, org-scoped app-data workbench state under `~/.feynman/orgs/<org_uuid>/workbench`, an org-level `feynman-workbench.db` mirror with physical tables for the full reference-shaped workbench ledger coverage map including compute egress/Modal environment fields and Feynman-owned connector ledgers, watch routine state, skill source/license state, setup decision state, review feedback state, compute poller lease state, redacted credential state, onboarding intent context, verification files, and `CHANGELOG.md` lab-notebook entries |
+| `feynman serve` | Standalone science workbench with project/session navigation, project metadata, in-app Pi chat, optional `--no-auth` plain localhost mode, Feynman Bio Tools, Ketcher chemistry sketch artifacts, notebooks, compute, Files host inventory for local, SSH/BYOC, and cloud-backed artifact contexts, audio/video/spreadsheet/notebook/LaTeX/science artifact previews including element-level HTML report annotations and KET/RXN/CDXML/CXSMILES chemistry sketches, artifact Notes and note preview modals, Cloud storage credential modal, Cloud export target/destination modal, frame records, frame message rows, frame backfill health records, lineage, provenance, settings, org-scoped app-data workbench state under `~/.feynman/orgs/<org_uuid>/workbench`, an org-level `feynman-workbench.db` mirror with physical tables for the full reference-shaped workbench ledger coverage map including compute egress/Modal environment fields and Feynman-owned connector ledgers, watch routine state, skill source/license state, setup decision state, review feedback state, compute poller lease state, redacted credential state, onboarding intent context, verification files, and `CHANGELOG.md` lab-notebook entries |
 | `/deepresearch <topic>` | Source-heavy multi-agent investigation |
 | `/lit <topic-or-lab>` | Literature review from paper search and primary sources; lab/PI inputs map publication trajectories and originality-ranked papers |
 | `/review <artifact>` | Research review with severity and revision plan |

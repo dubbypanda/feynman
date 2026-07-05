@@ -884,6 +884,7 @@ async function runMain(input: { here: string; appRoot: string; feynmanVersion: s
 			json: { type: "boolean" },
 			host: { type: "string" },
 			limit: { type: "string" },
+			"no-auth": { type: "boolean" },
 			"no-open": { type: "boolean" },
 			"expand-citations": { type: "string" },
 			"full-text-top": { type: "string" },
@@ -1022,6 +1023,7 @@ async function runMain(input: { here: string; appRoot: string; feynmanVersion: s
 			version: feynmanVersion,
 			host: values.host,
 			port: parseWorkbenchPort(values.port),
+			requireAuth: values["no-auth"] !== true,
 			shouldOpen: values["no-open"] !== true,
 		});
 		return;

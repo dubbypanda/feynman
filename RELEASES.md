@@ -9,6 +9,8 @@ GitHub release notes are generated from the matching `## vX.Y.Z` section in this
 ### Science Workbench
 
 - Expanded `feynman serve` into a standalone open-science workbench surface with Feynman-owned project/session/frame state, project metadata, Pi chat, frame message rows, frame backfill health records, Feynman Bio Tools, notebooks, compute inventory, artifacts, lineage, provenance, settings, memory categories, onboarding intent context, and redacted credential availability ledgers.
+- Added `feynman serve --no-auth` for trusted local testing with a plain localhost URL, while keeping the default tokenized local URL available.
+- Flattened the workbench chat composer and activity-card state colors so focused, running, approval, and failed-fetch states stay in the green Feynman surface instead of rendering warm rounded edge accents.
 - Added a Feynman-owned `~/.feynman/active-org.json` and `~/.feynman/orgs/<org_uuid>/` app spine so the local workbench has an org-scoped home structure instead of a flat scratch directory.
 - Added a Feynman-owned org database at `~/.feynman/orgs/<org_uuid>/feynman-workbench.db`, refreshed from the local workbench state with reference-shaped project, frame, message, artifact, artifact-version, execution, verification, memory, note, annotation, read-cursor, artifact-folder, compute-provider, MCP-grant, memory-category, routine-schedule, managed-endpoint, and capability-setting tables.
 - Added compact table envelopes in that database for the remaining reference-shaped workbench ledgers Feynman already owns in state, including agents, skills, credentials, OAuth tokens, events, notifications, session activity, claims, host logs, marketplace rows, and archive rows.

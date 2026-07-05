@@ -11,7 +11,7 @@ The science workbench is the local app behind `feynman serve`. It gives Feynman 
 feynman serve
 ```
 
-The command starts a local server, prints an authenticated localhost URL, and opens the workbench. The URL token is local to that server process.
+The command starts a local server, prints an authenticated localhost URL, and opens the workbench. The URL token is local to that server process. For trusted local testing, run `feynman serve --no-auth` to print a plain localhost URL with no token.
 
 ## What the workbench contains
 

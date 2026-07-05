@@ -57,6 +57,7 @@ type WorkbenchServerOptions = {
 	version?: string;
 	host?: string;
 	port?: number;
+	requireAuth?: boolean;
 	token?: string;
 	promptExecutor?: WorkbenchPromptExecutor;
 };
@@ -336,6 +337,7 @@ type WorkbenchRequestHandlerOptions = Required<Pick<WorkbenchServerOptions, "wor
 	appRoot?: string;
 	settingsPath?: string;
 	authPath?: string;
+	requireAuth: boolean;
 	sessionDir?: string;
 	feynmanAgentDir?: string;
 	version?: string;
@@ -395,15 +397,17 @@ async function handleWorkbenchRequest(
 			return;
 		}
 
-		const authorized = isAuthorized(request, url, options.token);
-		if (!authorized) {
-			send(response, 401, "Unauthorized. Open the URL printed by `feynman serve`.");
-			return;
-		}
-
 		const headers: Record<string, string> = {};
-		if (url.searchParams.get("token") === options.token) {
-			headers["set-cookie"] = tokenCookie(options.token);
+		if (options.requireAuth) {
+			const authorized = isAuthorized(request, url, options.token);
+			if (!authorized) {
+				send(response, 401, "Unauthorized. Open the URL printed by `feynman serve`.");
+				return;
+			}
+
+			if (url.searchParams.get("token") === options.token) {
+				headers["set-cookie"] = tokenCookie(options.token);
+			}
 		}
 
 		try {
@@ -1134,7 +1138,8 @@ export async function startWorkbenchServer(options: WorkbenchServerOptions): Pro
 		});
 	}
 
-	const token = options.token ?? randomBytes(24).toString("base64url");
+	const requireAuth = options.requireAuth !== false;
+	const token = requireAuth ? options.token ?? randomBytes(24).toString("base64url") : "";
 	const host = normalizeHost(options.host);
 	const requestedPort = options.port ?? 6174;
 	const server = createServer(createRequestHandler({
@@ -1143,6 +1148,7 @@ export async function startWorkbenchServer(options: WorkbenchServerOptions): Pro
 		feynmanAgentDir: options.feynmanAgentDir,
 		settingsPath: options.settingsPath,
 		authPath: options.authPath,
+		requireAuth,
 		workingDir: options.workingDir,
 		token,
 		...(options.version ? { version: options.version } : {}),
@@ -1163,7 +1169,7 @@ export async function startWorkbenchServer(options: WorkbenchServerOptions): Pro
 	return {
 		server,
 		url,
-		openUrl: `${url}?token=${encodeURIComponent(token)}`,
+		openUrl: requireAuth ? `${url}?token=${encodeURIComponent(token)}` : url,
 		token,
 		close: () => new Promise<void>((resolve, reject) => {
 			server.close((error) => (error ? reject(error) : resolve()));

@@ -692,7 +692,6 @@ button {
 	display: grid;
 	gap: 8px;
 	border: 1px solid #dbe5d2;
-	border-left-width: 3px;
 	border-radius: 8px;
 	padding: 9px 10px;
 	background: #fbfdf8;
@@ -701,22 +700,23 @@ button {
 
 .tool-card.running,
 .tool-card.queued {
-	border-left-color: #6f9d4d;
+	border-color: #cfdcc5;
+	background: #f8fbf4;
 }
 
 .tool-card.complete {
-	border-left-color: #4d8a55;
+	border-color: #dbe5d2;
 }
 
 .tool-card.approval {
-	border-left-color: #ba7b23;
-	background: #fffdf7;
+	border-color: #d8e2d0;
+	background: #fbfdf8;
 }
 
 .tool-card.error,
 .tool-card.stopped {
-	border-left-color: #af4f42;
-	background: #fffafa;
+	border-color: #d8e2d0;
+	background: #fbfdf8;
 }
 
 .tool-card-header {
@@ -780,10 +780,10 @@ button {
 .tool-approval-callout {
 	display: grid;
 	gap: 9px;
-	border: 1px solid #ead8ad;
+	border: 1px solid #d8e2d0;
 	border-radius: 8px;
 	padding: 9px;
-	background: #fff9e8;
+	background: #f8fbf4;
 }
 
 .tool-approval-callout > div:first-child {
@@ -793,13 +793,13 @@ button {
 
 .tool-approval-callout strong {
 	font-size: 12px;
-	color: #31270e;
+	color: #263420;
 }
 
 .tool-approval-callout span {
 	font-size: 12px;
 	line-height: 1.4;
-	color: #6b5823;
+	color: #54634d;
 }
 
 .tool-approval-callout code {
@@ -810,8 +810,8 @@ button {
 	font-size: 11px;
 	white-space: normal;
 	overflow-wrap: anywhere;
-	background: #f3e5bd;
-	color: #463915;
+	background: #e9f1e2;
+	color: #263420;
 }
 
 .tool-approval-actions {
@@ -896,10 +896,11 @@ button {
 }
 
 .inline-error {
+	border: 1px solid #d8e2d0;
 	border-radius: 8px;
 	padding: 10px 12px;
-	color: #7a251d;
-	background: #f8e6e1;
+	color: #405039;
+	background: #f5f8f1;
 }
 
 .composer {
@@ -912,7 +913,6 @@ button {
 	border: 1px solid #dfe7d6;
 	border-radius: 8px;
 	background: #ffffff;
-	box-shadow: 0 10px 28px rgba(33, 44, 28, 0.08);
 }
 
 .composer-tools {
@@ -1390,8 +1390,8 @@ button {
 
 .environment-result pre.error,
 .notebook-result pre.error {
-	color: #8a3328;
-	background: #f8e6e1;
+	color: #405039;
+	background: #f5f8f1;
 }
 
 .compact-list {
@@ -3712,8 +3712,8 @@ button {
 }
 
 .diff-empty.error {
-	color: #8a3328;
-	background: #f8e6e1;
+	color: #405039;
+	background: #f5f8f1;
 }
 
 .version-diff {
@@ -4607,8 +4607,8 @@ button {
 }
 
 .launcher-queue-card.running {
-	border-color: #d7dec4;
-	background: #fbf8eb;
+	border-color: #cfddc1;
+	background: #f8fbf4;
 }
 
 .launcher-queue-card.complete {
@@ -4627,8 +4627,8 @@ button {
 }
 
 .launcher-queue-card.running .launcher-queue-icon {
-	color: #6d5a1d;
-	background: #f4efd5;
+	color: #225632;
+	background: #e8f2e2;
 }
 
 .launcher-queue-copy {
