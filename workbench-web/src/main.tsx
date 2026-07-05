@@ -2816,18 +2816,12 @@ function App() {
 				onChange={(event) => void uploadFiles(event.currentTarget.files)}
 			/>
 			<aside className="rail" aria-label="Research sessions">
-				<div className="brand-row">
-					<div className="brand-mark"><Atom size={18} aria-hidden /></div>
+				<div className="project-header">
+					<div className="project-mark"><Atom size={18} aria-hidden /></div>
 					<div>
-						<div className="brand-title">Feynman</div>
-						<div className="brand-subtitle">Open science</div>
+						<p className="project-label">Project</p>
+						<h2>{project?.name ?? "Workspace"}</h2>
 					</div>
-				</div>
-
-				<div className="project-card">
-					<p className="project-label">Project</p>
-					<h2>{project?.name ?? "Workspace"}</h2>
-					<p>{project?.description ?? data?.workspaceName ?? "Loading"}</p>
 				</div>
 
 				<div className="rail-actions">

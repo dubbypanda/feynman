@@ -16,7 +16,8 @@ test("React workbench source owns the project Files and artifact inspection surf
 	assert.match(railActionsSource, /<span>Customize<\/span>/);
 	assert.match(railActionsSource, /<span>Files<\/span>/);
 	assert.doesNotMatch(railActionsSource, /<span>Search<\/span>|<span>Notebook<\/span>|<span>Compute<\/span>|<span>Memory<\/span>/);
-	assert.match(reactShellSource, /className="project-card"/);
+	assert.match(reactShellSource, /className="project-header"/);
+	assert.doesNotMatch(reactShellSource, /className="project-card"/);
 	assert.match(reactShellSource, /function ProjectLauncher/);
 	assert.match(reactShellSource, /className="launcher-project-card"/);
 	assert.match(reactShellSource, /<span>New project<\/span>/);

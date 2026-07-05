@@ -4,6 +4,13 @@ Workspace lab notebook for long-running or resumable research work.
 
 Use this file to track chronology, not release notes. Keep entries short, factual, and operational.
 
+### 2026-07-05 13:18 EDT — workbench-flat-project-header-parity
+
+- Objective: Continue the Claude Science 1:1 workbench parity goal by removing the extra card-like rail project summary that made the Feynman project rail denser and more decorated than the reference.
+- Changed: The React workbench rail now uses one compact flat project header with the Feynman mark and active project name, then immediately flows into `New chat`, `Customize`, `Files`, and the session list. The old rounded project summary card and rail description copy are removed from the in-project rail only.
+- Verified: Focused React/file-surface tests passed (`17/17`); root/workbench typecheck passed; `npm run build:workbench-web` passed with existing science-viewer bundle warnings; headless browser verification on `session-20260705160452-ae55be` showed `projectCard: null`, `brandRow: null`, rendered rail actions exactly `New chat`, `Customize`, `Files`, and the first action at `y=72` under a `46px` flat project header; architecture check passed with existing split-debt warnings; `git diff --check` passed; and full `npm test` passed (`585/585`).
+- Next: Commit the focused header slice, then continue with the next live rendered parity mismatch.
+
 ### 2026-07-05 13:12 EDT — workbench-project-rail-parity
 
 - Objective: Continue the Claude Science 1:1 workbench parity goal by making the in-project rail match the reference project action structure.
