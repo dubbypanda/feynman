@@ -6154,3 +6154,233 @@ button {
 		display: none;
 	}
 }
+
+/* ============================================================
+   Claude Science parity: light theme + frame simplification.
+   Re-skins the workbench frame surfaces to a clean light layout
+   with Feynman green as the single accent, and quiets the frame
+   chrome to match the reference (no status pills, metric strip,
+   or top-bar model/session menus in the default view).
+   ============================================================ */
+:root {
+	--cs-page: #fdfdfc;
+	--cs-panel: #ffffff;
+	--cs-subtle: #f6f6f4;
+	--cs-hover: #f0f1ee;
+	--cs-selected: #ececea;
+	--cs-border: #e8e8e5;
+	--cs-border-strong: #dcdcd8;
+	--cs-ink: #1a1a18;
+	--cs-ink-soft: #3c3c39;
+	--cs-muted: #6c6f68;
+	--cs-accent: #2f6a3d;
+	--cs-accent-strong: #245231;
+	--cs-accent-tint: #eef4ec;
+}
+
+* {
+	scrollbar-color: #cfd0cc transparent;
+}
+*::-webkit-scrollbar-thumb {
+	background: #cfd0cc;
+	background-clip: content-box;
+}
+
+.app-shell {
+	background: var(--cs-page);
+}
+
+/* --- Rail --- */
+.rail {
+	background: var(--cs-panel);
+	border-right: 1px solid var(--cs-border);
+}
+.rail-icon-button,
+.project-title-button {
+	color: var(--cs-ink);
+}
+.rail-icon-button {
+	color: var(--cs-muted);
+}
+.rail-icon-button:hover,
+.project-title-button:hover {
+	background: var(--cs-hover);
+	color: var(--cs-ink);
+}
+.rail-actions button {
+	color: var(--cs-ink-soft);
+}
+.rail-actions button:hover,
+.rail-actions .primary-action:hover {
+	background: var(--cs-hover);
+	color: var(--cs-ink);
+}
+.rail-section-label,
+.rail small,
+.session-row .session-meta {
+	color: var(--cs-muted);
+}
+.session-row {
+	color: var(--cs-ink-soft);
+}
+.session-row:hover {
+	background: var(--cs-hover);
+	color: var(--cs-ink);
+}
+.session-row.active,
+.session-row.selected,
+.session-row[aria-current="page"] {
+	background: var(--cs-selected);
+	color: var(--cs-ink);
+}
+.session-row.selected small {
+	color: var(--cs-muted);
+}
+
+/* --- Conversation canvas --- */
+.conversation {
+	background: var(--cs-panel);
+}
+.topbar h1 {
+	color: var(--cs-ink);
+}
+/* Quiet the frame: drop the reference-absent chrome */
+.topbar-right,
+.topbar-status,
+.context-strip,
+.conversation > .eyebrow,
+.topbar .eyebrow {
+	display: none !important;
+}
+.topbar {
+	padding: 32px 74px 12px;
+}
+
+/* --- Workspace tab strip --- */
+.workspace-tab-strip {
+	background: transparent;
+	border-bottom: 1px solid var(--cs-border);
+}
+.workspace-tab-strip button {
+	color: var(--cs-muted);
+	background: transparent;
+}
+.workspace-tab-strip button:hover {
+	background: var(--cs-hover);
+	color: var(--cs-ink);
+}
+.workspace-tab-strip button.active {
+	background: transparent;
+	color: var(--cs-accent);
+	box-shadow: inset 0 -2px 0 var(--cs-accent);
+}
+.workspace-tab-strip small {
+	background: var(--cs-selected);
+	color: var(--cs-muted);
+}
+
+/* --- Messages --- */
+.message-body {
+	background: transparent;
+	color: var(--cs-ink);
+}
+.message-meta,
+.message-meta-actions {
+	color: var(--cs-muted);
+}
+.message-meta-actions button {
+	background: transparent;
+	color: var(--cs-muted);
+}
+.message-meta-actions button:hover {
+	background: var(--cs-hover);
+	color: var(--cs-ink);
+}
+.message-body p,
+[data-transcript-content] {
+	color: var(--cs-ink);
+}
+.transcript a,
+.message-body a {
+	color: var(--cs-accent);
+}
+.empty-state {
+	color: var(--cs-muted);
+}
+.empty-state h2 {
+	color: var(--cs-ink);
+}
+
+/* --- Generated artifact tiles --- */
+.generated-artifact-tile {
+	background: var(--cs-panel);
+	border: 1px solid var(--cs-border);
+	color: var(--cs-ink);
+}
+.generated-artifact-tile:hover {
+	border-color: var(--cs-border-strong);
+	background: var(--cs-subtle);
+}
+.generated-artifacts-heading,
+.generated-artifact-tile small {
+	color: var(--cs-muted);
+}
+
+/* --- Composer --- */
+.composer {
+	background: transparent;
+}
+.composer-input-shell {
+	background: var(--cs-panel);
+	border: 1px solid var(--cs-border-strong);
+	color: var(--cs-ink);
+}
+.composer textarea {
+	background: transparent;
+	color: var(--cs-ink);
+}
+.composer textarea::placeholder {
+	color: var(--cs-muted);
+}
+.composer .composer-tools button {
+	background: transparent;
+	color: var(--cs-muted);
+}
+.composer .composer-tools button:hover {
+	background: var(--cs-hover);
+	color: var(--cs-ink);
+}
+.send-button {
+	background: var(--cs-accent);
+	color: #ffffff;
+}
+.send-button:hover:not(:disabled) {
+	background: var(--cs-accent-strong);
+}
+.send-button:disabled {
+	background: var(--cs-selected);
+	color: var(--cs-muted);
+}
+
+/* --- Files center pane + side panel --- */
+.center-files-panel,
+.center-files-panel .files-panel,
+.side-panel {
+	background: var(--cs-panel);
+	color: var(--cs-ink);
+}
+.center-files-panel .file-category-strip button,
+.center-files-panel .files-toolbar button,
+.center-files-panel .file-host-strip button {
+	background: var(--cs-subtle);
+	color: var(--cs-ink-soft);
+	border: 1px solid var(--cs-border);
+}
+
+/* --- Reviewer strip --- */
+.reviewer-strip,
+.review-strip {
+	background: var(--cs-subtle);
+	border: 1px solid var(--cs-border);
+	color: var(--cs-ink-soft);
+}

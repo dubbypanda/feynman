@@ -4,6 +4,13 @@ Workspace lab notebook for long-running or resumable research work.
 
 Use this file to track chronology, not release notes. Keep entries short, factual, and operational.
 
+### 2026-07-06 EDT — workbench-light-theme-parity
+
+- Objective: Close the biggest visual 1:1 gap. Drove the installed Claude Science app live (authenticated via `claude-science url`) and captured its real project frame: it is a clean LIGHT UI (`rgb(253,253,252)` background, near-black text, blue accent), not the dark-green theme the workbench had. Owner decision: match Claude's light layout with Feynman green as the single accent, and simplify the frame chrome.
+- Changed: Appended a light-theme override layer to `workbench-web/src/styles.css` that re-skins the frame surfaces (rail, conversation canvas, messages, generated tiles, composer, tab strip, files/side panels) to neutral light with `--cs-*` tokens and Feynman green (`#2f6a3d`) as the accent (links, active tab, selected session, send button). Hides the reference-absent chrome — top-bar status pills, model/session menus, and the context metric strip — to match Claude's quiet frame. Fixed the selected-session pill to a light-gray pill.
+- Verified: Focused source-contract tests pass; full `npm test` (`585/585`, Node 24); `build:workbench-web` green; live headless render on `/projects/workspace/frames/playwright` shows white rail/conversation/composer, hidden metric strip, green accent, and no console errors, matching the captured Claude Science reference frame.
+- Next: Tighten remaining details (composer column max-width/centering, generated-tile spacing) against the reference; regenerate stale dark-UI artifact thumbnails.
+
 ### 2026-07-06 EDT — workbench-center-tab-strip-parity
 
 - Objective: Finish the in-flight Claude Science parity slice that adds a Chat/Files tab strip to the workbench frame center pane, so Files can open in-place instead of only as a right-side panel.
